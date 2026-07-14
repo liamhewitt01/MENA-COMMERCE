@@ -1,4 +1,4 @@
-<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="6" width="100%" height="800px"><head>
+<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="7" width="100%" height="800px"><head>
     <style>
         :root {
             --bg-primary: #0b1329;
@@ -100,6 +100,16 @@
 
         .btn-accent:hover {
             background-color: #8338ec;
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            color: var(--accent-rose);
+            border: 1px solid var(--accent-rose);
+        }
+
+        .btn-danger:hover {
+            background-color: rgba(239, 71, 111, 0.1);
         }
 
         /* KPI Grid */
@@ -768,6 +778,14 @@
                 </button>
             </div>
 
+            <!-- Management Buttons: Save Confirmation indicator & Reset Demo Data -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" id="reset-data-btn" class="btn-danger" style="font-size: 11px; padding: 6px 10px;">
+                    ⚠️ Reset Demo Data
+                </button>
+                <span id="save-status-text" style="font-size: 11px; color: var(--accent-emerald); font-weight: 600;">✓ Auto-saved to Browser</span>
+            </div>
+
             <div class="modal-footer">
                 <button type="button" id="close-settings-btn" class="btn-primary">Done &amp; Save</button>
             </div>
@@ -775,8 +793,8 @@
     </div>
 
     <script>
-        // State store localized for regional commerce with service pillars added
-        let pipelineData = [
+        // Default Localized Placeholder structures
+        const defaultPipelineData = [
             { id: 1, name: "Omnichannel Commerce Replatform", company: "Majid Al Futtaim (MAF)", pillar: "Omnichannel", stage: "Proposal", val: 450000, prob: 0.50, owner: "Tariq Mansour" },
             { id: 2, name: "Saudi Hypermarket Marketplace Design", company: "Panda Retail Group", pillar: "Marketplaces & Retail Media", stage: "Negotiation", val: 380000, prob: 0.80, owner: "Layla Al-Saud" },
             { id: 3, name: "D2C Commerce Strategy Advisory", company: "Chalhoub Group", pillar: "Owned Commerce", stage: "Discovery", val: 120000, prob: 0.20, owner: "Amir El-Masry" },
@@ -785,16 +803,7 @@
             { id: 6, name: "Last-Mile Integration Rollout", company: "Aramex HQ", pillar: "Marketplaces & Retail Media", stage: "Closed Lost", val: 240000, prob: 0.00, owner: "Amir El-Masry" }
         ];
 
-        // Service pillar configuration database
-        const servicePillars = [
-            "Owned Commerce",
-            "Social Commerce",
-            "Marketplaces & Retail Media",
-            "Omnichannel"
-        ];
-
-        // Pipeline Configurable Stages Database - Re-sequenced per request
-        let pipelineStages = [
+        const defaultPipelineStages = [
             { name: "Outreach", prob: 0.05, color: "var(--accent-blue)", isLocked: false },
             { name: "Active Contact", prob: 0.10, color: "var(--accent-violet)", isLocked: false },
             { name: "Discovery", prob: 0.20, color: "var(--accent-blue)", isLocked: false },
@@ -804,8 +813,20 @@
             { name: "Closed Lost", prob: 0.00, color: "var(--accent-rose)", isLocked: true }
         ];
 
-        // Adjustable target state loaded dynamically
-        let targetRevenueGoal = 1500000;
+        const defaultTargetRevenue = 1500000;
+
+        // Initialize state databases from localStorage (or fallback to defaults if browser database empty)
+        let pipelineData = JSON.parse(localStorage.getItem("mena_tracker_deals")) || [...defaultPipelineData];
+        let pipelineStages = JSON.parse(localStorage.getItem("mena_tracker_stages")) || [...defaultPipelineStages];
+        let targetRevenueGoal = parseInt(localStorage.getItem("mena_tracker_goal")) || defaultTargetRevenue;
+
+        // Service pillar configuration database
+        const servicePillars = [
+            "Owned Commerce",
+            "Social Commerce",
+            "Marketplaces & Retail Media",
+            "Omnichannel"
+        ];
 
         // Cache DOM elements
         const tableBody = document.getElementById("pipeline-table-body");
@@ -817,6 +838,7 @@
         const progressCircle = document.getElementById("progress-circle");
         const progressPercentage = document.getElementById("progress-percentage");
         const salesTargetInput = document.getElementById("sales-target-input");
+        const saveStatusText = document.getElementById("save-status-text");
         
         // Filters & Modals
         const stageFilter = document.getElementById("stage-filter");
@@ -838,6 +860,7 @@
         const newStageName = document.getElementById("new-stage-name");
         const newStageProb = document.getElementById("new-stage-prob");
         const newStageColor = document.getElementById("new-stage-color");
+        const resetDataBtn = document.getElementById("reset-data-btn");
 
         // Helper: Convert CSS variables to static colors for select tags dropdown previewing
         const rawColorsMap = {
@@ -855,6 +878,21 @@
         // Format currencies beautifully
         function formatCurrency(amount) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+        }
+
+        // Helper: Auto-save configuration to browser LocalStorage database
+        function saveToDatabase() {
+            localStorage.setItem("mena_tracker_deals", JSON.stringify(pipelineData));
+            localStorage.setItem("mena_tracker_stages", JSON.stringify(pipelineStages));
+            localStorage.setItem("mena_tracker_goal", targetRevenueGoal.toString());
+            
+            // Show dynamic saving notification
+            saveStatusText.textContent = "✓ Saved to browser database";
+            saveStatusText.style.color = "var(--accent-emerald)";
+            setTimeout(() => {
+                saveStatusText.textContent = "✓ Auto-saved to Browser";
+                saveStatusText.style.color = "var(--text-muted)";
+            }, 1800);
         }
 
         // Apply color matching directly on dropdown boxes
@@ -1071,6 +1109,7 @@
 
                 selectPillar.addEventListener("change", (e) => {
                     deal.pillar = e.target.value;
+                    saveToDatabase();
                     recalculateDashboard();
                 });
 
@@ -1103,6 +1142,7 @@
                     deal.stage = e.target.value;
                     deal.prob = getProbForStage(deal.stage); // Set matching probability
                     styleDropdownElement(selectStage, deal.stage);
+                    saveToDatabase();
                     recalculateDashboard();
                 });
 
@@ -1119,6 +1159,7 @@
 
                 inputVal.addEventListener("change", (e) => {
                     deal.val = parseFloat(e.target.value) || 0;
+                    saveToDatabase();
                     recalculateDashboard();
                 });
 
@@ -1157,6 +1198,7 @@
                 inputOwner.addEventListener("change", (e) => {
                     deal.owner = e.target.value;
                     updateOwnerFilterOptions();
+                    saveToDatabase();
                     recalculateDashboard();
                 });
 
@@ -1169,6 +1211,7 @@
                 tdAction.querySelector(".action-icon").addEventListener("click", () => {
                     pipelineData.splice(idx, 1);
                     updateOwnerFilterOptions();
+                    saveToDatabase();
                     recalculateDashboard();
                 });
                 tr.appendChild(tdAction);
@@ -1202,6 +1245,7 @@
                             pipelineData.forEach(deal => {
                                 if (deal.stage === oldName) deal.stage = newName;
                             });
+                            saveToDatabase();
                         } else {
                             e.target.value = oldName; // Reset
                         }
@@ -1228,6 +1272,9 @@
                     const percent = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 100);
                     stage.prob = percent / 100;
                     e.target.value = percent;
+                    
+                    // Cascade changes to any active deals matching this probability ratio
+                    saveToDatabase();
                 });
                 tdProb.appendChild(inputProb);
                 tr.appendChild(tdProb);
@@ -1261,6 +1308,7 @@
                 selectColor.addEventListener("change", (e) => {
                     stage.color = e.target.value;
                     selectColor.style.color = getStageHex(stage.color);
+                    saveToDatabase();
                 });
 
                 tdColor.appendChild(selectColor);
@@ -1283,6 +1331,7 @@
                             }
                         });
                         pipelineStages.splice(index, 1);
+                        saveToDatabase();
                         renderStageSettingsTable();
                     });
                     tdAction.appendChild(delIcon);
@@ -1328,10 +1377,11 @@
                 owner: dealOwner
             });
 
-            // Reset, close and render
+            // Reset, close, save, and render
             dealForm.reset();
             modal.classList.remove("open");
             updateOwnerFilterOptions();
+            saveToDatabase();
             recalculateDashboard();
         });
 
@@ -1351,6 +1401,7 @@
         salesTargetInput.addEventListener("input", (e) => {
             const cleanTarget = Math.max(parseInt(e.target.value) || 100000, 1);
             targetRevenueGoal = cleanTarget;
+            saveToDatabase();
             recalculateDashboard();
         });
 
@@ -1386,8 +1437,31 @@
             newStageName.value = '';
             newStageProb.value = '';
             
-            // Re-render setup table
+            // Re-render setup table and save
+            saveToDatabase();
             renderStageSettingsTable();
+        });
+
+        // Reset Entire Application to default demo dataset
+        resetDataBtn.addEventListener("click", () => {
+            if (confirm("Are you sure you want to restore the default demo data? This will wipe your saved changes.")) {
+                localStorage.removeItem("mena_tracker_deals");
+                localStorage.removeItem("mena_tracker_stages");
+                localStorage.removeItem("mena_tracker_goal");
+                
+                pipelineData = [...defaultPipelineData];
+                pipelineStages = [...defaultPipelineStages];
+                targetRevenueGoal = defaultTargetRevenue;
+                salesTargetInput.value = defaultTargetRevenue;
+
+                updateStageDropdowns();
+                updateOwnerFilterOptions();
+                recalculateDashboard();
+                stageSettingsModal.classList.remove("open");
+                
+                // Alert confirmation
+                alert("Demo data successfully restored!");
+            }
         });
 
         // Live Filters Listeners
@@ -1396,7 +1470,8 @@
         pillarFilter.addEventListener("change", renderTableRows);
         ownerFilter.addEventListener("change", renderTableRows);
 
-        // Initial setup
+        // Initial setup lifecycle on page load
+        salesTargetInput.value = targetRevenueGoal;
         updateStageDropdowns();
         updateOwnerFilterOptions();
         recalculateDashboard();
