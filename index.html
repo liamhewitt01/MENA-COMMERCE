@@ -1,4 +1,4 @@
-<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="8" width="100%" height="800px"><head>
+<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="10" width="100%" height="800px"><head>
     <style>
         :root {
             --bg-primary: #0b1329;
@@ -28,6 +28,86 @@
             padding: 24px;
             min-height: 100vh;
             line-height: 1.5;
+        }
+
+        /* Password Gate Styling */
+        #password-gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.3s ease-out;
+        }
+
+        .gate-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .gate-logo {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #00b4d8, #7209b7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gate-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .gate-input {
+            width: 100%;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            margin-bottom: 16px;
+        }
+
+        .gate-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .gate-btn {
+            width: 100%;
+            padding: 12px;
+            justify-content: center;
+        }
+
+        .gate-error {
+            color: var(--accent-rose);
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        /* App wrapper hidden initially */
+        #app-content {
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
         }
 
         header {
@@ -481,7 +561,7 @@
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 24px;
-            width: 480px;
+            width: 520px;
             max-width: 90%;
             max-height: 90vh;
             overflow-y: auto;
@@ -572,122 +652,138 @@
 </head>
 <body>
 
-    <header>
-        <div class="header-title">
-            <h1 id="main-title">MENA Commerce Practice Pipeline &amp; Opp Tracker</h1>
-            <p id="sub-title">Interactive regional portfolio metrics, commercial health, and revenue forecasting.</p>
-        </div>
-        <div class="header-actions">
-            <button id="manage-stages-btn" class="btn-secondary">
-                ⚙️ Stage Settings
-            </button>
-            <button id="add-deal-btn" class="btn-primary">
-                + Add Opportunity
-            </button>
-        </div>
-    </header>
-
-    <!-- KPI Section -->
-    <div class="kpi-grid">
-        <div class="kpi-card blue">
-            <div id="kpi-1-label" class="kpi-label">Active MENA Pipeline</div>
-            <div id="active-val" class="kpi-value">$0</div>
-            <div id="kpi-1-sub" class="kpi-subtext">Cumulative worth of active regional pitches</div>
-        </div>
-        <div class="kpi-card violet">
-            <div id="kpi-2-label" class="kpi-label">Weighted Commerce Forecast</div>
-            <div id="weighted-val" class="kpi-value">$0</div>
-            <div id="kpi-2-sub" class="kpi-subtext">Probability-adjusted regional forecast</div>
-        </div>
-        <div class="kpi-card emerald">
-            <div id="kpi-3-label" class="kpi-label">Practice Target Progress</div>
-            <div id="win-rate-val" class="kpi-value">0%</div>
-            <div id="kpi-3-sub" class="kpi-subtext">Won commerce contracts vs target</div>
-        </div>
-        <div class="kpi-card amber">
-            <div id="kpi-4-label" class="kpi-label">Active Regional Accounts</div>
-            <div id="active-deals-count" class="kpi-value">0</div>
-            <div id="kpi-4-sub" class="kpi-subtext">Total open opportunities in motion</div>
+    <!-- SECURE PASSWORD GATE SCREEN -->
+    <div id="password-gate">
+        <div class="gate-card">
+            <div class="gate-logo">WPP / VML</div>
+            <div class="gate-subtitle">MENA Commerce Practice Pipeline Lock</div>
+            <form id="gate-form">
+                <input type="password" id="gate-password" class="gate-input" placeholder="Enter Portfolio Password" required="" autofocus="">
+                <button type="submit" class="btn-primary gate-btn">Unlock Dashboard</button>
+            </form>
+            <div id="gate-error" class="gate-error">Incorrect password. Please try again.</div>
         </div>
     </div>
 
-    <!-- Analytics Workspace Grid -->
-    <div class="workspace-grid">
-        <!-- Funnel and Stage distribution visual -->
-        <div class="dashboard-card">
-            <div class="card-header">
-                <div class="card-title" id="card-chart-1-title">Interactive Stage Distribution (Deals Count)</div>
+    <!-- MAIN TRACKER APP CONTENT -->
+    <div id="app-content">
+        <header>
+            <div class="header-title">
+                <h1 id="main-title">MENA Commerce Practice Pipeline &amp; Opp Tracker</h1>
+                <p id="sub-title">Interactive regional portfolio metrics, commercial health, and revenue forecasting.</p>
             </div>
-            <div class="chart-container">
-                <div class="funnel-visual" id="funnel-container">
-                    <!-- Dynamic Funnel Render -->
-                </div>
+            <div class="header-actions">
+                <button id="manage-stages-btn" class="btn-secondary">
+                    ⚙️ Settings &amp; Global Sync
+                </button>
+                <button id="add-deal-btn" class="btn-primary">
+                    + Add Opportunity
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI Section -->
+        <div class="kpi-grid">
+            <div class="kpi-card blue">
+                <div id="kpi-1-label" class="kpi-label">Active MENA Pipeline</div>
+                <div id="active-val" class="kpi-value">$0</div>
+                <div id="kpi-1-sub" class="kpi-subtext">Cumulative worth of active regional pitches</div>
+            </div>
+            <div class="kpi-card violet">
+                <div id="kpi-2-label" class="kpi-label">Weighted Commerce Forecast</div>
+                <div id="weighted-val" class="kpi-value">$0</div>
+                <div id="kpi-2-sub" class="kpi-subtext">Probability-adjusted regional forecast</div>
+            </div>
+            <div class="kpi-card emerald">
+                <div id="kpi-3-label" class="kpi-label">Practice Target Progress</div>
+                <div id="win-rate-val" class="kpi-value">0%</div>
+                <div id="kpi-3-sub" class="kpi-subtext">Won commerce contracts vs target</div>
+            </div>
+            <div class="kpi-card amber">
+                <div id="kpi-4-label" class="kpi-label">Active Regional Accounts</div>
+                <div id="active-deals-count" class="kpi-value">0</div>
+                <div id="kpi-4-sub" class="kpi-subtext">Total open opportunities in motion</div>
             </div>
         </div>
 
-        <!-- Target Progress Card -->
-        <div class="dashboard-card">
-            <div class="card-header">
-                <div class="card-title" id="card-chart-2-title">Practice Progress to Goal</div>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                <div class="radial-chart">
-                    <svg class="radial-svg" width="140" height="140">
-                        <circle class="radial-bg" cx="70" cy="70" r="60"></circle>
-                        <circle class="radial-progress" id="progress-circle" cx="70" cy="70" r="60"></circle>
-                    </svg>
-                    <div class="radial-text">
-                        <div class="radial-num" id="progress-percentage">0%</div>
-                        <div class="radial-lbl">To Target</div>
+        <!-- Workspace Grid: Charts + Controls -->
+        <div class="workspace-grid">
+            <!-- Funnel and Stage distribution visual -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-title" id="card-chart-1-title">Interactive Stage Distribution (Deals Count)</div>
+                </div>
+                <div class="chart-container">
+                    <div class="funnel-visual" id="funnel-container">
+                        <!-- Dynamic Funnel Render -->
                     </div>
                 </div>
-                
-                <!-- Dynamic Editable Target Setting Input Field -->
-                <div class="target-edit-wrapper">
-                    <span class="target-edit-label">Amend Sales Target (USD)</span>
-                    <input type="number" id="sales-target-input" class="target-edit-input" value="1500000" step="50000">
+            </div>
+
+            <!-- Target Progress Card -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-title" id="card-chart-2-title">Practice Progress to Goal</div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <div class="radial-chart">
+                        <svg class="radial-svg" width="140" height="140">
+                            <circle class="radial-bg" cx="70" cy="70" r="60"></circle>
+                            <circle class="radial-progress" id="progress-circle" cx="70" cy="70" r="60"></circle>
+                        </svg>
+                        <div class="radial-text">
+                            <div class="radial-num" id="progress-percentage">0%</div>
+                            <div class="radial-lbl">To Target</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dynamic Editable Target Setting Input Field -->
+                    <div class="target-edit-wrapper">
+                        <span class="target-edit-label">Amend Sales Target (USD)</span>
+                        <input type="number" id="sales-target-input" class="target-edit-input" value="1500000" step="50000">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Interactive Filters -->
-    <div class="filter-bar">
-        <input type="text" id="search-input" class="search-input" placeholder="Search accounts, client entity...">
-        <select id="stage-filter" class="filter-select">
-            <!-- Rendered dynamically -->
-        </select>
-        <select id="pillar-filter" class="filter-select">
-            <option value="ALL">All Service Pillars</option>
-            <option value="Owned Commerce">Owned Commerce</option>
-            <option value="Social Commerce">Social Commerce</option>
-            <option value="Marketplaces &amp; Retail Media">Marketplaces &amp; Retail Media</option>
-            <option value="Omnichannel">Omnichannel</option>
-        </select>
-        <select id="owner-filter" class="filter-select">
-            <option value="ALL">All WPP/VML Leads</option>
-        </select>
-    </div>
+        <!-- Interactive Filters -->
+        <div class="filter-bar">
+            <input type="text" id="search-input" class="search-input" placeholder="Search accounts, client entity...">
+            <select id="stage-filter" class="filter-select">
+                <!-- Rendered dynamically -->
+            </select>
+            <select id="pillar-filter" class="filter-select">
+                <option value="ALL">All Service Pillars</option>
+                <option value="Owned Commerce">Owned Commerce</option>
+                <option value="Social Commerce">Social Commerce</option>
+                <option value="Marketplaces &amp; Retail Media">Marketplaces &amp; Retail Media</option>
+                <option value="Omnichannel">Omnichannel</option>
+            </select>
+            <select id="owner-filter" class="filter-select">
+                <option value="ALL">All WPP/VML Leads</option>
+            </select>
+        </div>
 
-    <!-- Master Interactive Spreadsheet -->
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 22%">Opportunity / Client Entity</th>
-                    <th style="width: 16%">Service Pillar</th>
-                    <th style="width: 16%">Stage</th>
-                    <th style="width: 12%">Deal Value (USD)</th>
-                    <th style="width: 9%">Prob (%)</th>
-                    <th style="width: 12%">Weighted Forecast</th>
-                    <th style="width: 10%">WPP/VML Lead</th>
-                    <th style="width: 3%"></th>
-                </tr>
-            </thead>
-            <tbody id="pipeline-table-body">
-                <!-- Javascript will render rows here dynamically -->
-            </tbody>
-        </table>
+        <!-- Master Interactive Spreadsheet -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 22%">Opportunity / Client Entity</th>
+                        <th style="width: 16%">Service Pillar</th>
+                        <th style="width: 16%">Stage</th>
+                        <th style="width: 12%">Deal Value (USD)</th>
+                        <th style="width: 9%">Prob (%)</th>
+                        <th style="width: 12%">Weighted Forecast</th>
+                        <th style="width: 10%">WPP/VML Lead</th>
+                        <th style="width: 3%"></th>
+                    </tr>
+                </thead>
+                <tbody id="pipeline-table-body">
+                    <!-- Javascript will render rows here dynamically -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Interactive Modal to Add Opportunity -->
@@ -736,14 +832,11 @@
         </div>
     </div>
 
-    <!-- Interactive Config Modal for Stages & Probability -->
+    <!-- Interactive Config Modal for Stages, Probability & Global Sync -->
     <div id="stage-settings-modal" class="modal">
         <div class="modal-content" style="width: 580px;">
             <div class="modal-header">
-                <span>Manage Pipeline Stages &amp; Probabilities</span>
-            </div>
-            <div style="margin-bottom: 16px; font-size: 13px; color: var(--text-muted);">
-                Add new pipeline stages or edit current probability ratios. You can select custom theme colors for each stage to enable dynamic color-coding across the table and dropdowns.
+                <span>Manage Stages &amp; Global GitHub Sync</span>
             </div>
             
             <table class="settings-table">
@@ -760,26 +853,42 @@
                 </tbody>
             </table>
 
-            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
-                <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);">Add Custom Stage</h4>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px;">
+                <h4 style="font-size: 13px; margin-bottom: 8px; color: var(--text-main);">Add Custom Stage</h4>
                 <div style="display: flex; gap: 8px;">
                     <input type="text" id="new-stage-name" class="settings-input" placeholder="e.g. Technical Assessment" style="flex: 2;">
                     <input type="number" id="new-stage-prob" class="settings-input" placeholder="50" min="0" max="100" style="flex: 1;">
                     <select id="new-stage-color" class="settings-input" style="flex: 1.5; background: var(--bg-primary); color: white;">
-                        <option value="var(--accent-blue)" style="background-color: #0b1329; color: #00b4d8;">🩵 Blue</option>
-                        <option value="var(--accent-violet)" style="background-color: #0b1329; color: #7209b7;">💜 Violet</option>
-                        <option value="var(--accent-amber)" style="background-color: #0b1329; color: #ffd166;">💛 Amber</option>
-                        <option value="var(--accent-emerald)" style="background-color: #0b1329; color: #06d6a0;">💚 Emerald</option>
-                        <option value="var(--accent-rose)" style="background-color: #0b1329; color: #ef476f;">❤️ Rose</option>
+                        <option value="var(--accent-blue)">🩵 Blue</option>
+                        <option value="var(--accent-violet)">💜 Violet</option>
+                        <option value="var(--accent-amber)">💛 Amber</option>
+                        <option value="var(--accent-emerald)">💚 Emerald</option>
+                        <option value="var(--accent-rose)">❤️ Rose</option>
                     </select>
                 </div>
-                <button type="button" id="add-new-stage-btn" class="btn-accent" style="margin-top: 12px; width: 100%; justify-content: center;">
+                <button type="button" id="add-new-stage-btn" class="btn-accent" style="margin-top: 10px; width: 100%; justify-content: center; font-size: 12px; padding: 6px;">
                     Add Stage to Pipeline
                 </button>
             </div>
 
-            <!-- Management Buttons: Save Confirmation indicator & Reset Demo Data -->
-            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <!-- GLOBAL GITHUB DEPLOY SYNC PANEL -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px; background-color: rgba(11, 19, 41, 0.4); padding: 12px; border-radius: 8px;">
+                <h4 style="font-size: 13px; color: var(--text-main); margin-bottom: 4px;">🚀 Publish Changes globally to GitHub</h4>
+                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+                    Saves current opportunities and stages directly back into the live master repository code on GitHub.
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <input type="text" id="github-repo" class="settings-input" placeholder="Repository Path (e.g. vml-mena/commerce-tracker)">
+                    <input type="text" id="github-file" class="settings-input" placeholder="HTML Filename (e.g. index.html)">
+                    <input type="password" id="github-token" class="settings-input" placeholder="Paste GitHub Personal Access Token (PAT)">
+                </div>
+                <button type="button" id="sync-to-github-btn" class="btn-primary" style="margin-top: 10px; width: 100%; justify-content: center; font-size: 12px; padding: 8px;">
+                    📤 Save &amp; Publish Master File
+                </button>
+                <div id="github-sync-status" style="font-size: 11px; color: var(--accent-amber); margin-top: 8px; font-weight: 600; text-align: center;"></div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <button type="button" id="reset-data-btn" class="btn-danger" style="font-size: 11px; padding: 6px 10px;">
                     ⚠️ Reset Demo Data
                 </button>
@@ -787,13 +896,14 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" id="close-settings-btn" class="btn-primary">Done &amp; Save</button>
+                <button type="button" id="close-settings-btn" class="btn-primary">Done &amp; Close</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Default Localized Placeholder structures
+        // --- 1. DEFINE YOUR REAL BUSINESS PORTFOLIO AS DEFAULT TEMPLATES BELOW ---
+        // (Just replace the strings and numbers below with your actual data)
         const defaultPipelineData = [
             { id: 1, name: "Omnichannel Commerce Replatform", company: "Majid Al Futtaim (MAF)", pillar: "Omnichannel", stage: "Proposal", val: 450000, prob: 0.50, owner: "Tariq Mansour" },
             { id: 2, name: "Saudi Hypermarket Marketplace Design", company: "Panda Retail Group", pillar: "Marketplaces & Retail Media", stage: "Negotiation", val: 380000, prob: 0.80, owner: "Layla Al-Saud" },
@@ -815,32 +925,85 @@
 
         const defaultTargetRevenue = 1500000;
 
-        // --- BULLETPROOF DATABASE LOADER WITH DEEP CLONING ---
+        // --- PASSWORD CONFIGURATION ---
+        const CORRECT_PASSWORD = "WPPVML2026"; // Feel free to edit this string to set your custom password!
+
+        // Password gate validation
+        const passwordGate = document.getElementById("password-gate");
+        const appContent = document.getElementById("app-content");
+        const gateForm = document.getElementById("gate-form");
+        const gatePasswordInput = document.getElementById("gate-password");
+        const gateError = document.getElementById("gate-error");
+
+        function checkStoredPassword() {
+            const hasUnlockedBefore = localStorage.getItem("mena_tracker_unlocked") === "true";
+            if (hasUnlockedBefore) {
+                // Instantly bypass gate if password was successfully verified in a past session on this browser
+                passwordGate.style.display = "none";
+                appContent.style.opacity = "1";
+                initializeDashboard();
+            }
+        }
+
+        gateForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const input = gatePasswordInput.value.trim();
+
+            if (input === CORRECT_PASSWORD) {
+                localStorage.setItem("mena_tracker_unlocked", "true");
+                passwordGate.style.opacity = "0";
+                setTimeout(() => {
+                    passwordGate.style.display = "none";
+                    appContent.style.opacity = "1";
+                    initializeDashboard();
+                }, 300);
+            } else {
+                gateError.style.opacity = "1";
+                gatePasswordInput.value = "";
+                gatePasswordInput.focus();
+                setTimeout(() => {
+                    gateError.style.opacity = "0";
+                }, 3000);
+            }
+        });
+
+        // Initialize state databases from localStorage (or fallback to defaults if browser database empty)
         let pipelineData;
         let pipelineStages;
         let targetRevenueGoal;
 
-        try {
-            const savedDeals = localStorage.getItem("mena_tracker_deals");
-            const savedStages = localStorage.getItem("mena_tracker_stages");
-            const savedGoal = localStorage.getItem("mena_tracker_goal");
+        function initializeDashboard() {
+            try {
+                const savedDeals = localStorage.getItem("mena_tracker_deals");
+                const savedStages = localStorage.getItem("mena_tracker_stages");
+                const savedGoal = localStorage.getItem("mena_tracker_goal");
 
-            // Load saved data if BOTH deals and stages exist, preventing broken states
-            if (savedDeals && savedStages) {
-                pipelineData = JSON.parse(savedDeals);
-                pipelineStages = JSON.parse(savedStages);
-            } else {
-                // Deep clone default arrays to break active memory reference pointers
+                if (savedDeals && savedStages) {
+                    pipelineData = JSON.parse(savedDeals);
+                    pipelineStages = JSON.parse(savedStages);
+                } else {
+                    pipelineData = JSON.parse(JSON.stringify(defaultPipelineData));
+                    pipelineStages = JSON.parse(JSON.stringify(defaultPipelineStages));
+                }
+
+                targetRevenueGoal = savedGoal ? parseInt(savedGoal) : defaultTargetRevenue;
+            } catch (e) {
+                console.error("Failed to load local DB, fallback to default templates:", e);
                 pipelineData = JSON.parse(JSON.stringify(defaultPipelineData));
                 pipelineStages = JSON.parse(JSON.stringify(defaultPipelineStages));
+                targetRevenueGoal = defaultTargetRevenue;
             }
 
-            targetRevenueGoal = savedGoal ? parseInt(savedGoal) : defaultTargetRevenue;
-        } catch (e) {
-            console.error("Failed to load local DB, fallback to demo templates:", e);
-            pipelineData = JSON.parse(JSON.stringify(defaultPipelineData));
-            pipelineStages = JSON.parse(JSON.stringify(defaultPipelineStages));
-            targetRevenueGoal = defaultTargetRevenue;
+            // Fill Git settings inputs with stored values
+            document.getElementById("github-repo").value = localStorage.getItem("git_sync_repo") || "";
+            document.getElementById("github-file").value = localStorage.getItem("git_sync_file") || "index.html";
+            document.getElementById("github-token").value = localStorage.getItem("git_sync_token") || "";
+
+            // Initial setup lifecycle execution
+            salesTargetInput.value = targetRevenueGoal;
+            updateStageDropdowns();
+            updateOwnerFilterOptions();
+            recalculateDashboard();
         }
 
         // Service pillar configuration database
@@ -910,7 +1073,6 @@
                 localStorage.setItem("mena_tracker_stages", JSON.stringify(pipelineStages));
                 localStorage.setItem("mena_tracker_goal", targetRevenueGoal.toString());
                 
-                // Show dynamic saving notification
                 saveStatusText.textContent = "✓ Saved to browser database";
                 saveStatusText.style.color = "var(--accent-emerald)";
                 setTimeout(() => {
@@ -1484,8 +1646,101 @@
                 recalculateDashboard();
                 stageSettingsModal.classList.remove("open");
                 
-                // Alert confirmation
                 alert("Demo data successfully restored!");
+            }
+        });
+
+        // --- 🚀 DIRECT GITHUB API GLOBAL DEPLOY SYNC ENGINE ---
+        const syncToGithubBtn = document.getElementById("sync-to-github-btn");
+        const githubSyncStatus = document.getElementById("github-sync-status");
+
+        syncToGithubBtn.addEventListener("click", async () => {
+            const repo = document.getElementById("github-repo").value.trim();
+            const filename = document.getElementById("github-file").value.trim();
+            const token = document.getElementById("github-token").value.trim();
+
+            if (!repo || !filename || !token) {
+                alert("Please enter all required fields: Repository Path, Filename, and your Personal Access Token (PAT).");
+                return;
+            }
+
+            // Save settings locally so users don't have to re-enter them
+            localStorage.setItem("git_sync_repo", repo);
+            localStorage.setItem("git_sync_file", filename);
+            localStorage.setItem("git_sync_token", token);
+
+            githubSyncStatus.textContent = "Connecting to GitHub API...";
+            githubSyncStatus.style.color = "var(--accent-amber)";
+
+            try {
+                // 1. Get the current master file from GitHub to fetch its active SHA
+                const fileUrl = `https://api.github.com/repos/${repo}/contents/${filename}`;
+                const response = await fetch(fileUrl, {
+                    headers: { "Authorization": `token ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Could not find the target file. Check your repository path and filename.");
+                }
+
+                const fileData = await response.json();
+                const fileSha = fileData.sha;
+                const oldContent = atob(fileData.content.replace(/\s/g, '')); // Decode base64
+
+                // 2. Structurally locate the local state parameters inside the target file
+                // We use precise Regex blocks to target defaultPipelineData, defaultPipelineStages, and targetRevenue
+                const dealsRegex = /const\s+defaultPipelineData\s*=\s*\[[\s\S]*?\];/;
+                const stagesRegex = /const\s+defaultPipelineStages\s*=\s*\[[\s\S]*?\];/;
+                const targetRegex = /const\s+defaultTargetRevenue\s*=\s*\d+;/;
+
+                // Format your current workspace state cleanly to match code styling
+                const formattedDealsCode = `const defaultPipelineData = ${JSON.stringify(pipelineData, null, 12).replace(/\n/g, '\n')};`;
+                const formattedStagesCode = `const defaultPipelineStages = ${JSON.stringify(pipelineStages, null, 12).replace(/\n/g, '\n')};`;
+                const formattedTargetCode = `const defaultTargetRevenue = ${targetRevenueGoal};`;
+
+                // 3. Inject current live configurations directly into the new compiled code string
+                let updatedContent = oldContent
+                    .replace(dealsRegex, formattedDealsCode)
+                    .replace(stagesRegex, formattedStagesCode)
+                    .replace(targetRegex, formattedTargetCode);
+
+                // 4. Send the updated code back to GitHub to trigger a Commit
+                githubSyncStatus.textContent = "Committing changes to master branch...";
+                
+                const updateResponse = await fetch(fileUrl, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `token ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: "feat(pipeline): Update portfolio data and stages directly from dashboard sync",
+                        content: btoa(unescape(encodeURIComponent(updatedContent))), // Safe base64 encoding
+                        sha: fileSha
+                    })
+                });
+
+                if (updateResponse.ok) {
+                    githubSyncStatus.textContent = "✓ Master File Published Successfully! Reloading in 3s...";
+                    githubSyncStatus.style.color = "var(--accent-emerald)";
+                    
+                    // Clear other users' local cache force-reloading fresh master templates on next load
+                    localStorage.removeItem("mena_tracker_deals");
+                    localStorage.removeItem("mena_tracker_stages");
+                    localStorage.removeItem("mena_tracker_goal");
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    const errDetail = await updateResponse.json();
+                    throw new Error(errDetail.message || "Failed to push commit to GitHub.");
+                }
+
+            } catch (err) {
+                console.error(err);
+                githubSyncStatus.textContent = `❌ Error: ${err.message}`;
+                githubSyncStatus.style.color = "var(--accent-rose)";
             }
         });
 
@@ -1495,11 +1750,8 @@
         pillarFilter.addEventListener("change", renderTableRows);
         ownerFilter.addEventListener("change", renderTableRows);
 
-        // Initial setup lifecycle on page load
-        salesTargetInput.value = targetRevenueGoal;
-        updateStageDropdowns();
-        updateOwnerFilterOptions();
-        recalculateDashboard();
+        // Run security checks on page open
+        checkStoredPassword();
 
     </script>
 
