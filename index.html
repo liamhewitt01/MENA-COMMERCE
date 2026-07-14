@@ -1,4 +1,4 @@
-<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="12" width="100%" height="800px"><head>
+<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="13" width="100%" height="800px"><head>
     <style>
         :root {
             --bg-primary: #0b1329;
@@ -549,7 +549,7 @@
 
     <script>
         // --- 1. ENTER YOUR GOOGLE SHEET CONFIGURATION HERE ---
-        const SHEET_ID = "10Y7rOUKY2OOGJKInuRGuANjFE0EvLq7NabxsCDCNP7Q"; // Paste your Google Sheet ID string here!
+        const SHEET_ID = "YOUR_GOOGLE_SHEET_ID_HERE"; // Paste your Google Sheet ID string here!
         const SHEET_NAME = "Sheet1"; // The name of the tab containing your data
 
         // Default local Stages database
@@ -615,35 +615,84 @@
             }
         }
 
-        // Clean CSV parser handles quotes, commas, and row formatting
+        // Clean CSV parser handles quotes, commas, and dynamic row-scanning
         function parseCsvToPipeline(csvText) {
-            const lines = csvText.split(/\r?\n/);
+            // Split CSV by lines
+            const lines = csvText.split(/\r?\n/).map(line => {
+                // Match commas outside of quotes to parse cells safely
+                const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+                return cells.map(cell => cell.replace(/^"|"$/g, '').trim());
+            });
+
+            if (lines.length === 0) return;
+
+            // DYNAMIC HEADER SCANNING: Find which index matches which field
+            let opportunityColIdx = -1;
+            let clientColIdx = -1;
+            let pillarColIdx = -1;
+            let stageColIdx = -1;
+            let valueColIdx = -1;
+            let leadColIdx = -1;
+
+            let headerRowIdx = -1;
+
+            // Scan rows to find our headers row
+            for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                const cells = lines[i];
+                opportunityColIdx = cells.findIndex(c => c.toLowerCase().includes("opportunity"));
+                clientColIdx = cells.findIndex(c => c.toLowerCase().includes("client"));
+                
+                if (opportunityColIdx !== -1 && clientColIdx !== -1) {
+                    headerRowIdx = i;
+                    pillarColIdx = cells.findIndex(c => c.toLowerCase().includes("pillar"));
+                    stageColIdx = cells.findIndex(c => c.toLowerCase().includes("stage"));
+                    valueColIdx = cells.findIndex(c => c.toLowerCase().includes("value"));
+                    leadColIdx = cells.findIndex(c => c.toLowerCase().includes("lead"));
+                    break;
+                }
+            }
+
+            // Fallback default indices if headers aren't found
+            if (headerRowIdx === -1) {
+                headerRowIdx = 0;
+                opportunityColIdx = 0;
+                clientColIdx = 1;
+                pillarColIdx = 2;
+                stageColIdx = 3;
+                valueColIdx = 4;
+                leadColIdx = 5;
+            }
+
             const parsedDeals = [];
 
-            // Skip header (Line 0) and process rows
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
+            // Process all rows AFTER our headers row
+            for (let i = headerRowIdx + 1; i < lines.length; i++) {
+                const cells = lines[i];
+                if (!cells || cells.length <= Math.max(opportunityColIdx, clientColIdx)) continue;
+                
+                const oppName = cells[opportunityColIdx];
+                if (!oppName || oppName.trim() === "") continue; // Skip blank rows
 
-                // Match commas outside of quotes
-                const cells = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-                const cleanCells = cells.map(cell => cell.replace(/^"|"$/g, '').trim());
+                const clientName = cells[clientColIdx] || "";
+                const servicePillar = pillarColIdx !== -1 ? (cells[pillarColIdx] || "Omnichannel") : "Omnichannel";
+                const stageName = stageColIdx !== -1 ? (cells[stageColIdx] || "Discovery") : "Discovery";
+                
+                const rawValueStr = valueColIdx !== -1 ? (cells[valueColIdx] || "0") : "0";
+                const valueNum = parseFloat(rawValueStr.replace(/[^\d.]/g, '')) || 0;
+                
+                const leadName = leadColIdx !== -1 ? (cells[leadColIdx] || "-") : "-";
+                const probValue = getProbForStage(stageName);
 
-                if (cleanCells.length >= 5) {
-                    const value = parseFloat(cleanCells[4].replace(/[^\d.]/g, '')) || 0;
-                    const stage = cleanCells[3] || "Discovery";
-                    const prob = getProbForStage(stage);
-
-                    parsedDeals.push({
-                        id: i,
-                        name: cleanCells[0] || "Unnamed Opportunity",
-                        company: cleanCells[1] || "Unnamed Client",
-                        pillar: cleanCells[2] || "Omnichannel",
-                        stage: stage,
-                        val: value,
-                        prob: prob,
-                        owner: cleanCells[5] || "Unknown Lead"
-                    });
-                }
+                parsedDeals.push({
+                    id: i,
+                    name: oppName,
+                    company: clientName,
+                    pillar: servicePillar,
+                    stage: stageName,
+                    val: valueNum,
+                    prob: probValue,
+                    owner: leadName
+                });
             }
 
             pipelineData = parsedDeals;
@@ -655,11 +704,13 @@
         }
 
         function getProbForStage(stageName) {
+            if (!stageName) return 0.50;
             const found = pipelineStages.find(s => s.name.toLowerCase() === stageName.toLowerCase().trim());
             return found ? found.prob : 0.50;
         }
 
         function getColorForStage(stageName) {
+            if (!stageName) return "var(--bg-tertiary)";
             const found = pipelineStages.find(s => s.name.toLowerCase() === stageName.toLowerCase().trim());
             return found ? found.color : "var(--bg-tertiary)";
         }
