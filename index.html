@@ -1,4 +1,4 @@
-<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="2" width="100%" height="800px"><head>
+<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="3" width="100%" height="800px"><head>
     <style>
         :root {
             --bg-primary: #0b1329;
@@ -93,6 +93,15 @@
             background-color: var(--bg-tertiary);
         }
 
+        .btn-accent {
+            background-color: var(--accent-violet);
+            color: var(--text-main);
+        }
+
+        .btn-accent:hover {
+            background-color: #8338ec;
+        }
+
         /* KPI Grid */
         .kpi-grid {
             display: grid;
@@ -120,9 +129,9 @@
         }
 
         .kpi-card.blue::before { background-color: var(--accent-blue); }
+        .kpi-card.violet::before { background-color: var(--accent-violet); }
         .kpi-card.emerald::before { background-color: var(--accent-emerald); }
         .kpi-card.amber::before { background-color: var(--accent-amber); }
-        .kpi-card.violet::before { background-color: var(--accent-violet); }
 
         .kpi-label {
             font-size: 12px;
@@ -185,7 +194,8 @@
         /* Analytics Graphics */
         .chart-container {
             position: relative;
-            height: 220px;
+            height: auto;
+            min-height: 220px;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -207,10 +217,13 @@
         }
 
         .funnel-stage {
-            width: 120px;
+            width: 140px;
             text-align: right;
             color: var(--text-muted);
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .funnel-bar-container {
@@ -419,8 +432,10 @@
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 24px;
-            width: 450px;
+            width: 480px;
             max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
             transform: scale(0.95);
             transition: transform 0.2s ease;
         }
@@ -433,6 +448,9 @@
             font-size: 18px;
             font-weight: 700;
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .form-group {
@@ -467,6 +485,40 @@
             gap: 12px;
             margin-top: 24px;
         }
+
+        /* Probability Settings Table UI */
+        .settings-table {
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        
+        .settings-table th, .settings-table td {
+            padding: 8px;
+            font-size: 13px;
+        }
+
+        .settings-input {
+            width: 100%;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+
+        .settings-input:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -477,6 +529,9 @@
             <p id="sub-title">Interactive regional portfolio metrics, commercial health, and revenue forecasting.</p>
         </div>
         <div class="header-actions">
+            <button id="manage-stages-btn" class="btn-secondary">
+                ⚙️ Stage Settings
+            </button>
             <button id="add-deal-btn" class="btn-primary">
                 + Add Opportunity
             </button>
@@ -548,12 +603,7 @@
     <div class="filter-bar">
         <input type="text" id="search-input" class="search-input" placeholder="Search accounts, regional clients, or lead partners...">
         <select id="stage-filter" class="filter-select">
-            <option value="ALL">All Stages</option>
-            <option value="Discovery">Discovery</option>
-            <option value="Proposal">Proposal</option>
-            <option value="Negotiation">Negotiation</option>
-            <option value="Closed Won">Closed Won</option>
-            <option value="Closed Lost">Closed Lost</option>
+            <!-- Rendered dynamically -->
         </select>
         <select id="owner-filter" class="filter-select">
             <option value="ALL">All Practice Leads</option>
@@ -566,11 +616,11 @@
             <thead>
                 <tr>
                     <th style="width: 25%">Opportunity / Regional Client</th>
-                    <th style="width: 15%">Stage</th>
-                    <th style="width: 15%">Deal Value (USD)</th>
-                    <th style="width: 10%">Probability (%)</th>
-                    <th style="width: 15%">Weighted Forecast (USD)</th>
-                    <th style="width: 15%">Practice Lead</th>
+                    <th style="width: 18%">Stage</th>
+                    <th style="width: 14%">Deal Value (USD)</th>
+                    <th style="width: 11%">Probability (%)</th>
+                    <th style="width: 14%">Weighted Forecast (USD)</th>
+                    <th style="width: 13%">Practice Lead</th>
                     <th style="width: 5%"></th>
                 </tr>
             </thead>
@@ -583,7 +633,9 @@
     <!-- Interactive Modal to Add Opportunity -->
     <div id="add-deal-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header" id="modal-heading-title">Create New regional Opportunity</div>
+            <div class="modal-header">
+                <span id="modal-heading-title">Create New Regional Opportunity</span>
+            </div>
             <form id="deal-form">
                 <div class="form-group">
                     <label for="deal-name">Opportunity / Project Scope</label>
@@ -596,11 +648,7 @@
                 <div class="form-group">
                     <label for="deal-stage">Pipeline Stage</label>
                     <select id="deal-stage" class="form-field">
-                        <option value="Discovery">Discovery (20%)</option>
-                        <option value="Proposal">Proposal Sent (50%)</option>
-                        <option value="Negotiation">Negotiation (80%)</option>
-                        <option value="Closed Won">Closed Won (100%)</option>
-                        <option value="Closed Lost">Closed Lost (0%)</option>
+                        <!-- Rendered dynamically from configuration -->
                     </select>
                 </div>
                 <div class="form-group">
@@ -619,10 +667,58 @@
         </div>
     </div>
 
+    <!-- Interactive Config Modal for Stages & Probability -->
+    <div id="stage-settings-modal" class="modal">
+        <div class="modal-content" style="width: 550px;">
+            <div class="modal-header">
+                <span>Manage Pipeline Stages &amp; Probabilities</span>
+            </div>
+            <div style="margin-bottom: 16px; font-size: 13px; color: var(--text-muted);">
+                Add new pipeline stages or edit current probability ratios. "Closed Won" (100% target progress) and "Closed Lost" (0% tracking) flags are preserved to drive target calculations.
+            </div>
+            
+            <table class="settings-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Stage Name</th>
+                        <th style="width: 25%">Prob (%)</th>
+                        <th style="width: 20%">Color</th>
+                        <th style="width: 15%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="settings-stages-body">
+                    <!-- Dynamic rendering of configurations -->
+                </tbody>
+            </table>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+                <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);">Add Custom Stage</h4>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="new-stage-name" class="settings-input" placeholder="e.g. Technical Assessment" style="flex: 2;">
+                    <input type="number" id="new-stage-prob" class="settings-input" placeholder="50" min="0" max="100" style="flex: 1;">
+                    <select id="new-stage-color" class="settings-input" style="flex: 1.2; background: var(--bg-primary); color: white;">
+                        <option value="var(--accent-blue)">Blue</option>
+                        <option value="var(--accent-violet)">Violet</option>
+                        <option value="var(--accent-amber)">Amber</option>
+                        <option value="var(--accent-emerald)">Emerald</option>
+                        <option value="var(--accent-rose)">Rose</option>
+                    </select>
+                </div>
+                <button type="button" id="add-new-stage-btn" class="btn-accent" style="margin-top: 12px; width: 100%; justify-content: center;">
+                    Add Stage to Pipeline
+                </button>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="close-settings-btn" class="btn-primary">Done &amp; Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // State store localized for regional commerce
         let pipelineData = [
-            { id: 1, name: "Omnichannel Commerce Replatform", company: "Majid Al Futtaim (MAF)", stage: "Proposal", val: 450000, prob: 0.60, owner: "Tariq Mansour" },
+            { id: 1, name: "Omnichannel Commerce Replatform", company: "Majid Al Futtaim (MAF)", stage: "Proposal", val: 450000, prob: 0.50, owner: "Tariq Mansour" },
             { id: 2, name: "Saudi Hypermarket Marketplace Design", company: "Panda Retail Group", stage: "Negotiation", val: 380000, prob: 0.80, owner: "Layla Al-Saud" },
             { id: 3, name: "D2C Commerce Strategy Advisory", company: "Chalhoub Group", stage: "Discovery", val: 120000, prob: 0.20, owner: "Amir El-Masry" },
             { id: 4, name: "Loyalty Integration Engine Setup", company: "Alshaya Group", stage: "Discovery", val: 310000, prob: 0.20, owner: "Tariq Mansour" },
@@ -630,25 +726,17 @@
             { id: 6, name: "Last-Mile Integration Rollout", company: "Aramex HQ", stage: "Closed Lost", val: 240000, prob: 0.00, owner: "Amir El-Masry" }
         ];
 
+        // Pipeline Configurable Stages Database
+        let pipelineStages = [
+            { name: "Discovery", prob: 0.20, color: "var(--accent-blue)", isLocked: false },
+            { name: "Proposal", prob: 0.50, color: "var(--accent-violet)", isLocked: false },
+            { name: "Negotiation", prob: 0.80, color: "var(--accent-amber)", isLocked: false },
+            { name: "Closed Won", prob: 1.00, color: "var(--accent-emerald)", isLocked: true },
+            { name: "Closed Lost", prob: 0.00, color: "var(--accent-rose)", isLocked: true }
+        ];
+
         // Adjusted revenue target reflective of high-value commerce portfolios
         const targetRevenueGoal = 1500000;
-
-        // Stage Probability Map for automatic adjustments
-        const probabilityPresets = {
-            "Discovery": 0.20,
-            "Proposal": 0.50,
-            "Negotiation": 0.80,
-            "Closed Won": 1.00,
-            "Closed Lost": 0.00
-        };
-
-        const stageColors = {
-            "Discovery": "var(--accent-blue)",
-            "Proposal": "var(--accent-violet)",
-            "Negotiation": "var(--accent-amber)",
-            "Closed Won": "var(--accent-emerald)",
-            "Closed Lost": "var(--accent-rose)"
-        };
 
         // Cache DOM elements
         const tableBody = document.getElementById("pipeline-table-body");
@@ -659,6 +747,8 @@
         const funnelContainer = document.getElementById("funnel-container");
         const progressCircle = document.getElementById("progress-circle");
         const progressPercentage = document.getElementById("progress-percentage");
+        
+        // Filters & Modals
         const stageFilter = document.getElementById("stage-filter");
         const ownerFilter = document.getElementById("owner-filter");
         const searchInput = document.getElementById("search-input");
@@ -666,18 +756,52 @@
         const addBtn = document.getElementById("add-deal-btn");
         const closeBtn = document.getElementById("close-modal-btn");
         const dealForm = document.getElementById("deal-form");
+        const dealStageDropdown = document.getElementById("deal-stage");
+
+        // Settings Elements
+        const manageStagesBtn = document.getElementById("manage-stages-btn");
+        const stageSettingsModal = document.getElementById("stage-settings-modal");
+        const closeSettingsBtn = document.getElementById("close-settings-btn");
+        const settingsStagesBody = document.getElementById("settings-stages-body");
+        const addNewStageBtn = document.getElementById("add-new-stage-btn");
+        const newStageName = document.getElementById("new-stage-name");
+        const newStageProb = document.getElementById("new-stage-prob");
+        const newStageColor = document.getElementById("new-stage-color");
 
         // Format currencies beautifully
         function formatCurrency(amount) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
         }
 
+        // Initialize / Re-render Stage drop-downs
+        function updateStageDropdowns() {
+            const selectedFilter = stageFilter.value || "ALL";
+            
+            // 1. Rebuild primary screen's stage filter
+            stageFilter.innerHTML = '<option value="ALL">All Stages</option>';
+            pipelineStages.forEach(stage => {
+                const opt = document.createElement("option");
+                opt.value = stage.name;
+                opt.textContent = `${stage.name} (${Math.round(stage.prob * 100)}%)`;
+                stageFilter.appendChild(opt);
+            });
+            stageFilter.value = selectedFilter;
+
+            // 2. Rebuild opportunity modal stage select
+            dealStageDropdown.innerHTML = '';
+            pipelineStages.forEach(stage => {
+                const opt = document.createElement("option");
+                opt.value = stage.name;
+                opt.textContent = `${stage.name} (${Math.round(stage.prob * 100)}%)`;
+                dealStageDropdown.appendChild(opt);
+            });
+        }
+
         // Initialize Owner Dropdown list based on unique data
         function updateOwnerFilterOptions() {
-            const currentSelected = ownerFilter.value;
+            const currentSelected = ownerFilter.value || "ALL";
             const uniqueOwners = [...new Set(pipelineData.map(d => d.owner))];
             
-            // Re-render
             ownerFilter.innerHTML = '<option value="ALL">All Practice Leads</option>';
             uniqueOwners.forEach(owner => {
                 const opt = document.createElement("option");
@@ -688,6 +812,18 @@
             ownerFilter.value = currentSelected;
         }
 
+        // Get probability from current active configuration array
+        function getProbForStage(stageName) {
+            const found = pipelineStages.find(s => s.name === stageName);
+            return found ? found.prob : 0.00;
+        }
+
+        // Get custom brand color from stage config
+        function getColorForStage(stageName) {
+            const found = pipelineStages.find(s => s.name === stageName);
+            return found ? found.color : "var(--bg-tertiary)";
+        }
+
         // Calculate and Render Dashboard
         function recalculateDashboard() {
             let activePipeline = 0;
@@ -695,18 +831,20 @@
             let totalClosedWon = 0;
             let totalActiveDeals = 0;
 
-            // Stage grouping counters for funnel chart
-            const funnelGroups = {
-                "Discovery": 0,
-                "Proposal": 0,
-                "Negotiation": 0,
-                "Closed Won": 0,
-                "Closed Lost": 0
-            };
+            // Dynamically seed funnel grouping from the current stages
+            const funnelGroups = {};
+            pipelineStages.forEach(stage => {
+                funnelGroups[stage.name] = 0;
+            });
 
             pipelineData.forEach(deal => {
-                const weighted = deal.val * deal.prob;
-                funnelGroups[deal.stage] += deal.val;
+                const dealProb = getProbForStage(deal.stage);
+                const weighted = deal.val * dealProb;
+                
+                // Track dynamic configurations safety
+                if (funnelGroups[deal.stage] !== undefined) {
+                    funnelGroups[deal.stage] += deal.val;
+                }
 
                 if (deal.stage !== "Closed Won" && deal.stage !== "Closed Lost") {
                     activePipeline += deal.val;
@@ -729,13 +867,12 @@
             progressPercentage.textContent = `${percentageToGoal}%`;
 
             // Update Target Progress Circle (SVG Dash Offset Math)
-            // Stroke-dasharray of circle = 2 * PI * r = 2 * 3.14159 * 60 = ~377
             const totalDash = 377;
             const currentDashOffset = totalDash - (totalDash * (percentageToGoal / 100));
             progressCircle.style.strokeDashoffset = currentDashOffset;
 
             // Build funnel interactive elements
-            renderFunnelChart(funnelGroups, Math.max(...Object.values(funnelGroups)));
+            renderFunnelChart(funnelGroups, Math.max(...Object.values(funnelGroups), 1));
             
             // Re-render dynamic main table rows
             renderTableRows();
@@ -745,18 +882,19 @@
         function renderFunnelChart(funnelGroups, maxVal) {
             funnelContainer.innerHTML = '';
             
-            Object.keys(funnelGroups).forEach(stage => {
-                const val = funnelGroups[stage];
-                // Calculate percentage relative to maximum valued stage to scale bars accurately
-                const percentScale = maxVal > 0 ? (val / maxVal) * 100 : 0;
-                const stageColor = stageColors[stage];
+            pipelineStages.forEach(stageObj => {
+                const stageName = stageObj.name;
+                const val = funnelGroups[stageName] || 0;
+                const percentScale = (val / maxVal) * 100;
+                const stageColor = stageObj.color;
 
                 const row = document.createElement("div");
                 row.className = "funnel-row";
 
                 const label = document.createElement("div");
                 label.className = "funnel-stage";
-                label.textContent = stage;
+                label.textContent = stageName;
+                label.title = stageName;
 
                 const barContainer = document.createElement("div");
                 barContainer.className = "funnel-bar-container";
@@ -782,12 +920,18 @@
         // Main dynamically generated spreadsheet grid UI
         function renderTableRows() {
             const searchQuery = searchInput.value.toLowerCase().trim();
-            const stageFilterVal = stageFilter.value;
-            const ownerFilterVal = ownerFilter.value;
+            const stageFilterVal = stageFilter.value || "ALL";
+            const ownerFilterVal = ownerFilter.value || "ALL";
 
             tableBody.innerHTML = '';
 
             pipelineData.forEach((deal, idx) => {
+                // Ensure stage actually exists in active config, default if stage was removed
+                const stageExists = pipelineStages.some(s => s.name === deal.stage);
+                if (!stageExists && pipelineStages.length > 0) {
+                    deal.stage = pipelineStages[0].name;
+                }
+
                 // Filters evaluation
                 const matchesSearch = deal.name.toLowerCase().includes(searchQuery) || 
                                       deal.company.toLowerCase().includes(searchQuery) ||
@@ -812,18 +956,19 @@
                 selectStage.className = "filter-select";
                 selectStage.style.fontSize = "12px";
                 selectStage.style.padding = "6px";
+                selectStage.style.width = "100%";
                 
-                ["Discovery", "Proposal", "Negotiation", "Closed Won", "Closed Lost"].forEach(optVal => {
+                pipelineStages.forEach(stageObj => {
                     const option = document.createElement("option");
-                    option.value = optVal;
-                    option.textContent = optVal;
-                    if(deal.stage === optVal) option.selected = true;
+                    option.value = stageObj.name;
+                    option.textContent = stageObj.name;
+                    if(deal.stage === stageObj.name) option.selected = true;
                     selectStage.appendChild(option);
                 });
 
                 selectStage.addEventListener("change", (e) => {
                     deal.stage = e.target.value;
-                    deal.prob = probabilityPresets[deal.stage]; // Auto set probability
+                    deal.prob = getProbForStage(deal.stage); // Set matching probability
                     recalculateDashboard();
                 });
 
@@ -846,18 +991,17 @@
                 tdValue.appendChild(inputVal);
                 tr.appendChild(tdValue);
 
-                // Cell 4: Interactive Probability Control
+                // Cell 4: Dynamic Probability Control (Updates Stage setting sync)
                 const tdProb = document.createElement("td");
                 const inputProb = document.createElement("input");
                 inputProb.type = "number";
                 inputProb.step = "5";
                 inputProb.className = "form-control";
-                inputProb.value = Math.round(deal.prob * 100);
-
-                inputProb.addEventListener("change", (e) => {
-                    deal.prob = (parseFloat(e.target.value) || 0) / 100;
-                    recalculateDashboard();
-                });
+                inputProb.value = Math.round(getProbForStage(deal.stage) * 100);
+                inputProb.disabled = true; // Governed automatically by custom settings
+                inputProb.title = "Governed by Master Stage Configuration settings";
+                inputProb.style.opacity = "0.7";
+                inputProb.style.cursor = "not-allowed";
 
                 tdProb.appendChild(inputProb);
                 tr.appendChild(tdProb);
@@ -866,7 +1010,7 @@
                 const tdWeighted = document.createElement("td");
                 tdWeighted.style.fontFamily = "monospace";
                 tdWeighted.style.fontSize = "14px";
-                tdWeighted.textContent = formatCurrency(deal.val * deal.prob);
+                tdWeighted.textContent = formatCurrency(deal.val * getProbForStage(deal.stage));
                 tr.appendChild(tdWeighted);
 
                 // Cell 6: Editable Owner
@@ -899,8 +1043,121 @@
             });
         }
 
-        // Modal Action Handlers
+        // Render Master Configurations inside setup Modal
+        function renderStageSettingsTable() {
+            settingsStagesBody.innerHTML = '';
+            
+            pipelineStages.forEach((stage, index) => {
+                const tr = document.createElement("tr");
+
+                // Stage Name Input (Editable if not locked)
+                const tdName = document.createElement("td");
+                if (stage.isLocked) {
+                    tdName.innerHTML = `<strong>${stage.name}</strong> <span class="badge" style="background: var(--bg-primary); color: var(--accent-emerald);">System</span>`;
+                } else {
+                    const inputName = document.createElement("input");
+                    inputName.type = "text";
+                    inputName.className = "settings-input";
+                    inputName.value = stage.name;
+                    inputName.addEventListener("change", (e) => {
+                        const oldName = stage.name;
+                        const newName = e.target.value.trim();
+                        if (newName && !pipelineStages.some(s => s.name === newName)) {
+                            stage.name = newName;
+                            // Update affected pipeline deals stage reference
+                            pipelineData.forEach(deal => {
+                                if (deal.stage === oldName) deal.stage = newName;
+                            });
+                        } else {
+                            e.target.value = oldName; // Reset
+                        }
+                    });
+                    tdName.appendChild(inputName);
+                }
+                tr.appendChild(tdName);
+
+                // Probability Input
+                const tdProb = document.createElement("td");
+                const inputProb = document.createElement("input");
+                inputProb.type = "number";
+                inputProb.min = "0";
+                inputProb.max = "100";
+                inputProb.className = "settings-input";
+                inputProb.value = Math.round(stage.prob * 100);
+                
+                // Allow locked system properties to update probability except won/lost absolute limits
+                if (stage.name === "Closed Won" || stage.name === "Closed Lost") {
+                    inputProb.disabled = true;
+                }
+
+                inputProb.addEventListener("change", (e) => {
+                    const percent = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 100);
+                    stage.prob = percent / 100;
+                    e.target.value = percent;
+                });
+                tdProb.appendChild(inputProb);
+                tr.appendChild(tdProb);
+
+                // Color badge selector
+                const tdColor = document.createElement("td");
+                const selectColor = document.createElement("select");
+                selectColor.className = "settings-input";
+                selectColor.style.background = "var(--bg-primary)";
+                selectColor.style.color = "white";
+                
+                const colors = [
+                    { val: "var(--accent-blue)", text: "Blue" },
+                    { val: "var(--accent-violet)", text: "Violet" },
+                    { val: "var(--accent-amber)", text: "Amber" },
+                    { val: "var(--accent-emerald)", text: "Emerald" },
+                    { val: "var(--accent-rose)", text: "Rose" }
+                ];
+
+                colors.forEach(col => {
+                    const opt = document.createElement("option");
+                    opt.value = col.val;
+                    opt.textContent = col.text;
+                    if(stage.color === col.val) opt.selected = true;
+                    selectColor.appendChild(opt);
+                });
+
+                selectColor.addEventListener("change", (e) => {
+                    stage.color = e.target.value;
+                });
+
+                tdColor.appendChild(selectColor);
+                tr.appendChild(tdColor);
+
+                // Row Actions
+                const tdAction = document.createElement("td");
+                if (stage.isLocked) {
+                    tdAction.innerHTML = `<span style="font-size: 11px; color: var(--text-muted);">Protected</span>`;
+                } else {
+                    const delIcon = document.createElement("span");
+                    delIcon.className = "action-icon";
+                    delIcon.innerHTML = "&#x2715;";
+                    delIcon.title = "Delete Custom Stage";
+                    delIcon.addEventListener("click", () => {
+                        // Reassign any pipelines using deleted stage
+                        pipelineData.forEach(deal => {
+                            if (deal.stage === stage.name) {
+                                deal.stage = "Discovery"; // fallback safely
+                            }
+                        });
+                        pipelineStages.splice(index, 1);
+                        renderStageSettingsTable();
+                    });
+                    tdAction.appendChild(delIcon);
+                }
+                tr.appendChild(tdAction);
+
+                settingsStagesBody.appendChild(tr);
+            });
+        }
+
+        // Add Opportunity Modal Handlers
         addBtn.addEventListener("click", () => {
+            updateStageDropdowns();
             modal.classList.add("open");
         });
 
@@ -923,7 +1180,7 @@
                 company: companyName,
                 stage: dealStage,
                 val: dealVal,
-                prob: probabilityPresets[dealStage],
+                prob: getProbForStage(dealStage),
                 owner: dealOwner
             });
 
@@ -934,12 +1191,61 @@
             recalculateDashboard();
         });
 
+        // Stage Config Modal Handlers
+        manageStagesBtn.addEventListener("click", () => {
+            renderStageSettingsTable();
+            stageSettingsModal.classList.add("open");
+        });
+
+        closeSettingsBtn.addEventListener("click", () => {
+            stageSettingsModal.classList.remove("open");
+            updateStageDropdowns();
+            recalculateDashboard();
+        });
+
+        // Add New Custom Stage Action
+        addNewStageBtn.addEventListener("click", () => {
+            const name = newStageName.value.trim();
+            const probPercent = parseInt(newStageProb.value);
+            const color = newStageColor.value;
+
+            if (!name) {
+                alert("Please enter a Stage Name.");
+                return;
+            }
+
+            if (pipelineStages.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+                alert("A stage with this name already exists.");
+                return;
+            }
+
+            if (isNaN(probPercent) || probPercent < 0 || probPercent > 100) {
+                alert("Please enter a valid probability percentage between 0 and 100.");
+                return;
+            }
+
+            pipelineStages.push({
+                name: name,
+                prob: probPercent / 100,
+                color: color,
+                isLocked: false
+            });
+
+            // Clear configuration inputs
+            newStageName.value = '';
+            newStageProb.value = '';
+            
+            // Re-render setup table
+            renderStageSettingsTable();
+        });
+
         // Live Filters Listeners
         searchInput.addEventListener("input", renderTableRows);
         stageFilter.addEventListener("change", renderTableRows);
         ownerFilter.addEventListener("change", renderTableRows);
 
         // Initial setup
+        updateStageDropdowns();
         updateOwnerFilterOptions();
         recalculateDashboard();
 
