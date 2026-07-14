@@ -1,4 +1,4 @@
-<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="5" width="100%" height="800px"><head>
+<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="6" width="100%" height="800px"><head>
     <style>
         :root {
             --bg-primary: #0b1329;
@@ -296,6 +296,40 @@
             color: var(--text-muted);
         }
 
+        /* Target Settings UI */
+        .target-edit-wrapper {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .target-edit-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .target-edit-input {
+            width: 160px;
+            text-align: center;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--accent-emerald);
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .target-edit-input:focus {
+            border-color: var(--accent-emerald);
+        }
+
         /* Filter bar & Tools */
         .filter-bar {
             background-color: var(--bg-secondary);
@@ -316,7 +350,7 @@
             padding: 10px 14px;
             border-radius: 8px;
             font-size: 14px;
-            min-width: 250px;
+            min-width: 200px;
             outline: none;
         }
 
@@ -362,14 +396,14 @@
             text-transform: uppercase;
             font-weight: 600;
             letter-spacing: 0.05em;
-            padding: 16px 20px;
+            padding: 16px 15px;
             border-bottom: 1px solid var(--border-color);
         }
 
         td {
-            padding: 16px 20px;
+            padding: 14px 15px;
             border-bottom: 1px solid var(--border-color);
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-main);
         }
 
@@ -386,7 +420,7 @@
             border: 1px solid transparent;
             color: var(--text-main);
             font-family: inherit;
-            font-size: 14px;
+            font-size: 13px;
             width: 100%;
             padding: 6px;
             border-radius: 4px;
@@ -586,7 +620,7 @@
             <div class="card-header">
                 <div class="card-title" id="card-chart-2-title">Practice Progress to Goal</div>
             </div>
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                 <div class="radial-chart">
                     <svg class="radial-svg" width="140" height="140">
                         <circle class="radial-bg" cx="70" cy="70" r="60"></circle>
@@ -597,8 +631,11 @@
                         <div class="radial-lbl">To Target</div>
                     </div>
                 </div>
-                <div style="text-align: center; font-size: 12px; color: var(--text-muted);" id="target-details-text">
-                    Practice Goal: $1,500,000 USD
+                
+                <!-- Dynamic Editable Target Setting Input Field -->
+                <div class="target-edit-wrapper">
+                    <span class="target-edit-label">Amend Sales Target (USD)</span>
+                    <input type="number" id="sales-target-input" class="target-edit-input" value="1500000" step="50000">
                 </div>
             </div>
         </div>
@@ -606,9 +643,16 @@
 
     <!-- Interactive Filters -->
     <div class="filter-bar">
-        <input type="text" id="search-input" class="search-input" placeholder="Search accounts, regional clients, or lead partners...">
+        <input type="text" id="search-input" class="search-input" placeholder="Search accounts, client entity...">
         <select id="stage-filter" class="filter-select">
             <!-- Rendered dynamically -->
+        </select>
+        <select id="pillar-filter" class="filter-select">
+            <option value="ALL">All Service Pillars</option>
+            <option value="Owned Commerce">Owned Commerce</option>
+            <option value="Social Commerce">Social Commerce</option>
+            <option value="Marketplaces &amp; Retail Media">Marketplaces &amp; Retail Media</option>
+            <option value="Omnichannel">Omnichannel</option>
         </select>
         <select id="owner-filter" class="filter-select">
             <option value="ALL">All WPP/VML Leads</option>
@@ -620,12 +664,13 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 25%">Opportunity / Regional Client</th>
-                    <th style="width: 22%">Stage</th>
-                    <th style="width: 14%">Deal Value (USD)</th>
-                    <th style="width: 11%">Probability (%)</th>
-                    <th style="width: 14%">Weighted Forecast (USD)</th>
-                    <th style="width: 11%">WPP/VML Lead</th>
+                    <th style="width: 22%">Opportunity / Client Entity</th>
+                    <th style="width: 16%">Service Pillar</th>
+                    <th style="width: 16%">Stage</th>
+                    <th style="width: 12%">Deal Value (USD)</th>
+                    <th style="width: 9%">Prob (%)</th>
+                    <th style="width: 12%">Weighted Forecast</th>
+                    <th style="width: 10%">WPP/VML Lead</th>
                     <th style="width: 3%"></th>
                 </tr>
             </thead>
@@ -649,6 +694,15 @@
                 <div class="form-group">
                     <label for="company-name">Client Entity</label>
                     <input type="text" id="company-name" class="form-field" required="" placeholder="e.g. Al Futtaim Group">
+                </div>
+                <div class="form-group">
+                    <label for="deal-pillar">Service Pillar</label>
+                    <select id="deal-pillar" class="form-field" style="background-color: var(--bg-primary); color: white;">
+                        <option value="Owned Commerce">Owned Commerce</option>
+                        <option value="Social Commerce">Social Commerce</option>
+                        <option value="Marketplaces &amp; Retail Media">Marketplaces &amp; Retail Media</option>
+                        <option value="Omnichannel">Omnichannel</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="deal-stage">Pipeline Stage</label>
@@ -721,14 +775,22 @@
     </div>
 
     <script>
-        // State store localized for regional commerce
+        // State store localized for regional commerce with service pillars added
         let pipelineData = [
-            { id: 1, name: "Omnichannel Commerce Replatform", company: "Majid Al Futtaim (MAF)", stage: "Proposal", val: 450000, prob: 0.50, owner: "Tariq Mansour" },
-            { id: 2, name: "Saudi Hypermarket Marketplace Design", company: "Panda Retail Group", stage: "Negotiation", val: 380000, prob: 0.80, owner: "Layla Al-Saud" },
-            { id: 3, name: "D2C Commerce Strategy Advisory", company: "Chalhoub Group", stage: "Discovery", val: 120000, prob: 0.20, owner: "Amir El-Masry" },
-            { id: 4, name: "Loyalty Integration Engine Setup", company: "Alshaya Group", stage: "Active Contact", val: 310000, prob: 0.10, owner: "Tariq Mansour" },
-            { id: 5, name: "B2B Commerce Procurement Portal", company: "Emaar Properties", stage: "Closed Won", val: 550000, prob: 1.00, owner: "Layla Al-Saud" },
-            { id: 6, name: "Last-Mile Integration Rollout", company: "Aramex HQ", stage: "Closed Lost", val: 240000, prob: 0.00, owner: "Amir El-Masry" }
+            { id: 1, name: "Omnichannel Commerce Replatform", company: "Majid Al Futtaim (MAF)", pillar: "Omnichannel", stage: "Proposal", val: 450000, prob: 0.50, owner: "Tariq Mansour" },
+            { id: 2, name: "Saudi Hypermarket Marketplace Design", company: "Panda Retail Group", pillar: "Marketplaces & Retail Media", stage: "Negotiation", val: 380000, prob: 0.80, owner: "Layla Al-Saud" },
+            { id: 3, name: "D2C Commerce Strategy Advisory", company: "Chalhoub Group", pillar: "Owned Commerce", stage: "Discovery", val: 120000, prob: 0.20, owner: "Amir El-Masry" },
+            { id: 4, name: "Loyalty Integration Engine Setup", company: "Alshaya Group", pillar: "Omnichannel", stage: "Active Contact", val: 310000, prob: 0.10, owner: "Tariq Mansour" },
+            { id: 5, name: "B2B Commerce Procurement Portal", company: "Emaar Properties", pillar: "Owned Commerce", stage: "Closed Won", val: 550000, prob: 1.00, owner: "Layla Al-Saud" },
+            { id: 6, name: "Last-Mile Integration Rollout", company: "Aramex HQ", pillar: "Marketplaces & Retail Media", stage: "Closed Lost", val: 240000, prob: 0.00, owner: "Amir El-Masry" }
+        ];
+
+        // Service pillar configuration database
+        const servicePillars = [
+            "Owned Commerce",
+            "Social Commerce",
+            "Marketplaces & Retail Media",
+            "Omnichannel"
         ];
 
         // Pipeline Configurable Stages Database - Re-sequenced per request
@@ -742,8 +804,8 @@
             { name: "Closed Lost", prob: 0.00, color: "var(--accent-rose)", isLocked: true }
         ];
 
-        // Adjusted revenue target reflective of high-value commerce portfolios
-        const targetRevenueGoal = 1500000;
+        // Adjustable target state loaded dynamically
+        let targetRevenueGoal = 1500000;
 
         // Cache DOM elements
         const tableBody = document.getElementById("pipeline-table-body");
@@ -754,9 +816,11 @@
         const funnelContainer = document.getElementById("funnel-container");
         const progressCircle = document.getElementById("progress-circle");
         const progressPercentage = document.getElementById("progress-percentage");
+        const salesTargetInput = document.getElementById("sales-target-input");
         
         // Filters & Modals
         const stageFilter = document.getElementById("stage-filter");
+        const pillarFilter = document.getElementById("pillar-filter");
         const ownerFilter = document.getElementById("owner-filter");
         const searchInput = document.getElementById("search-input");
         const modal = document.getElementById("add-deal-modal");
@@ -878,7 +942,7 @@
                 
                 // Track counts instead of values
                 if (funnelGroups[deal.stage] !== undefined) {
-                    funnelGroups[deal.stage]++; // Count incremented instead of cash value addition
+                    funnelGroups[deal.stage]++;
                 }
 
                 if (deal.stage !== "Closed Won" && deal.stage !== "Closed Lost") {
@@ -896,7 +960,7 @@
             weightedValEl.textContent = formatCurrency(weightedForecast);
             activeDealsEl.textContent = totalActiveDeals;
 
-            // Target Progress Calculation
+            // Target Progress Calculation using fully dynamic, user-adjustable Target State
             const percentageToGoal = Math.min(Math.round((totalClosedWon / targetRevenueGoal) * 100), 100);
             winRateValEl.textContent = `${percentageToGoal}%`;
             progressPercentage.textContent = `${percentageToGoal}%`;
@@ -956,6 +1020,7 @@
         function renderTableRows() {
             const searchQuery = searchInput.value.toLowerCase().trim();
             const stageFilterVal = stageFilter.value || "ALL";
+            const pillarFilterVal = pillarFilter.value || "ALL";
             const ownerFilterVal = ownerFilter.value || "ALL";
 
             tableBody.innerHTML = '';
@@ -972,9 +1037,10 @@
                                       deal.company.toLowerCase().includes(searchQuery) ||
                                       deal.owner.toLowerCase().includes(searchQuery);
                 const matchesStage = stageFilterVal === "ALL" || deal.stage === stageFilterVal;
+                const matchesPillar = pillarFilterVal === "ALL" || deal.pillar === pillarFilterVal;
                 const matchesOwner = ownerFilterVal === "ALL" || deal.owner === ownerFilterVal;
 
-                if (!matchesSearch || !matchesStage || !matchesOwner) {
+                if (!matchesSearch || !matchesStage || !matchesPillar || !matchesOwner) {
                     return; // Skip rendering
                 }
 
@@ -985,7 +1051,33 @@
                 tdDetails.innerHTML = `<strong>${deal.name}</strong><br><span style="font-size: 11px; color: var(--text-muted);">${deal.company}</span>`;
                 tr.appendChild(tdDetails);
 
-                // Cell 2: Interactive Stage select with ADVANCED Color Coding
+                // Cell 2: Interactive Service Pillar Dropdown Selection
+                const tdPillar = document.createElement("td");
+                const selectPillar = document.createElement("select");
+                selectPillar.className = "filter-select";
+                selectPillar.style.fontSize = "12px";
+                selectPillar.style.padding = "6px";
+                selectPillar.style.width = "100%";
+                selectPillar.style.backgroundColor = "var(--bg-primary)";
+
+                servicePillars.forEach(pillarOpt => {
+                    const option = document.createElement("option");
+                    option.value = pillarOpt;
+                    option.textContent = pillarOpt;
+                    option.style.backgroundColor = "var(--bg-primary)";
+                    if (deal.pillar === pillarOpt) option.selected = true;
+                    selectPillar.appendChild(option);
+                });
+
+                selectPillar.addEventListener("change", (e) => {
+                    deal.pillar = e.target.value;
+                    recalculateDashboard();
+                });
+
+                tdPillar.appendChild(selectPillar);
+                tr.appendChild(tdPillar);
+
+                // Cell 3: Interactive Stage select with ADVANCED Color Coding
                 const tdStage = document.createElement("td");
                 const selectStage = document.createElement("select");
                 selectStage.className = "filter-select";
@@ -1017,7 +1109,7 @@
                 tdStage.appendChild(selectStage);
                 tr.appendChild(tdStage);
 
-                // Cell 3: Interactive Value Field
+                // Cell 4: Interactive Value Field
                 const tdValue = document.createElement("td");
                 const inputVal = document.createElement("input");
                 inputVal.type = "number";
@@ -1033,7 +1125,7 @@
                 tdValue.appendChild(inputVal);
                 tr.appendChild(tdValue);
 
-                // Cell 4: Dynamic Probability Control (Updates Stage setting sync)
+                // Cell 5: Dynamic Probability Control (Updates Stage setting sync)
                 const tdProb = document.createElement("td");
                 const inputProb = document.createElement("input");
                 inputProb.type = "number";
@@ -1048,14 +1140,14 @@
                 tdProb.appendChild(inputProb);
                 tr.appendChild(tdProb);
 
-                // Cell 5: Readonly Auto-Weighted Calculation
+                // Cell 6: Readonly Auto-Weighted Calculation
                 const tdWeighted = document.createElement("td");
                 tdWeighted.style.fontFamily = "monospace";
-                tdWeighted.style.fontSize = "14px";
+                tdWeighted.style.fontSize = "13px";
                 tdWeighted.textContent = formatCurrency(deal.val * getProbForStage(deal.stage));
                 tr.appendChild(tdWeighted);
 
-                // Cell 6: Editable WPP/VML Lead
+                // Cell 7: Editable WPP/VML Lead
                 const tdOwner = document.createElement("td");
                 const inputOwner = document.createElement("input");
                 inputOwner.type = "text";
@@ -1071,7 +1163,7 @@
                 tdOwner.appendChild(inputOwner);
                 tr.appendChild(tdOwner);
 
-                // Cell 7: Row Management Delete Button
+                // Cell 8: Row Management Delete Button
                 const tdAction = document.createElement("td");
                 tdAction.innerHTML = `<span class="action-icon" title="Remove Entry">&#x2715;</span>`;
                 tdAction.querySelector(".action-icon").addEventListener("click", () => {
@@ -1219,6 +1311,7 @@
             e.preventDefault();
             const dealName = document.getElementById("deal-name").value;
             const companyName = document.getElementById("company-name").value;
+            const dealPillar = document.getElementById("deal-pillar").value;
             const dealStage = document.getElementById("deal-stage").value;
             const dealVal = parseFloat(document.getElementById("deal-value").value) || 0;
             const dealOwner = document.getElementById("deal-owner").value;
@@ -1228,6 +1321,7 @@
                 id: Date.now(),
                 name: dealName,
                 company: companyName,
+                pillar: dealPillar,
                 stage: dealStage,
                 val: dealVal,
                 prob: getProbForStage(dealStage),
@@ -1250,6 +1344,13 @@
         closeSettingsBtn.addEventListener("click", () => {
             stageSettingsModal.classList.remove("open");
             updateStageDropdowns();
+            recalculateDashboard();
+        });
+
+        // Sales Target Input Handler
+        salesTargetInput.addEventListener("input", (e) => {
+            const cleanTarget = Math.max(parseInt(e.target.value) || 100000, 1);
+            targetRevenueGoal = cleanTarget;
             recalculateDashboard();
         });
 
@@ -1292,6 +1393,7 @@
         // Live Filters Listeners
         searchInput.addEventListener("input", renderTableRows);
         stageFilter.addEventListener("change", renderTableRows);
+        pillarFilter.addEventListener("change", renderTableRows);
         ownerFilter.addEventListener("change", renderTableRows);
 
         // Initial setup
