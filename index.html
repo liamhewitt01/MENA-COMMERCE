@@ -1,4 +1,4 @@
-<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="7" width="100%" height="800px"><head>
+<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="8" width="100%" height="800px"><head>
     <style>
         :root {
             --bg-primary: #0b1329;
@@ -815,10 +815,33 @@
 
         const defaultTargetRevenue = 1500000;
 
-        // Initialize state databases from localStorage (or fallback to defaults if browser database empty)
-        let pipelineData = JSON.parse(localStorage.getItem("mena_tracker_deals")) || [...defaultPipelineData];
-        let pipelineStages = JSON.parse(localStorage.getItem("mena_tracker_stages")) || [...defaultPipelineStages];
-        let targetRevenueGoal = parseInt(localStorage.getItem("mena_tracker_goal")) || defaultTargetRevenue;
+        // --- BULLETPROOF DATABASE LOADER WITH DEEP CLONING ---
+        let pipelineData;
+        let pipelineStages;
+        let targetRevenueGoal;
+
+        try {
+            const savedDeals = localStorage.getItem("mena_tracker_deals");
+            const savedStages = localStorage.getItem("mena_tracker_stages");
+            const savedGoal = localStorage.getItem("mena_tracker_goal");
+
+            // Load saved data if BOTH deals and stages exist, preventing broken states
+            if (savedDeals && savedStages) {
+                pipelineData = JSON.parse(savedDeals);
+                pipelineStages = JSON.parse(savedStages);
+            } else {
+                // Deep clone default arrays to break active memory reference pointers
+                pipelineData = JSON.parse(JSON.stringify(defaultPipelineData));
+                pipelineStages = JSON.parse(JSON.stringify(defaultPipelineStages));
+            }
+
+            targetRevenueGoal = savedGoal ? parseInt(savedGoal) : defaultTargetRevenue;
+        } catch (e) {
+            console.error("Failed to load local DB, fallback to demo templates:", e);
+            pipelineData = JSON.parse(JSON.stringify(defaultPipelineData));
+            pipelineStages = JSON.parse(JSON.stringify(defaultPipelineStages));
+            targetRevenueGoal = defaultTargetRevenue;
+        }
 
         // Service pillar configuration database
         const servicePillars = [
@@ -880,19 +903,23 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
         }
 
-        // Helper: Auto-save configuration to browser LocalStorage database
+        // --- SYSTEMATIC IMMEDIATE SAVE ACTION ---
         function saveToDatabase() {
-            localStorage.setItem("mena_tracker_deals", JSON.stringify(pipelineData));
-            localStorage.setItem("mena_tracker_stages", JSON.stringify(pipelineStages));
-            localStorage.setItem("mena_tracker_goal", targetRevenueGoal.toString());
-            
-            // Show dynamic saving notification
-            saveStatusText.textContent = "✓ Saved to browser database";
-            saveStatusText.style.color = "var(--accent-emerald)";
-            setTimeout(() => {
-                saveStatusText.textContent = "✓ Auto-saved to Browser";
-                saveStatusText.style.color = "var(--text-muted)";
-            }, 1800);
+            try {
+                localStorage.setItem("mena_tracker_deals", JSON.stringify(pipelineData));
+                localStorage.setItem("mena_tracker_stages", JSON.stringify(pipelineStages));
+                localStorage.setItem("mena_tracker_goal", targetRevenueGoal.toString());
+                
+                // Show dynamic saving notification
+                saveStatusText.textContent = "✓ Saved to browser database";
+                saveStatusText.style.color = "var(--accent-emerald)";
+                setTimeout(() => {
+                    saveStatusText.textContent = "✓ Auto-saved to Browser";
+                    saveStatusText.style.color = "var(--text-muted)";
+                }, 1000);
+            } catch (err) {
+                console.error("Local storage write failed:", err);
+            }
         }
 
         // Apply color matching directly on dropdown boxes
@@ -1109,7 +1136,7 @@
 
                 selectPillar.addEventListener("change", (e) => {
                     deal.pillar = e.target.value;
-                    saveToDatabase();
+                    saveToDatabase(); // Instant Save on pillar change
                     recalculateDashboard();
                 });
 
@@ -1142,7 +1169,7 @@
                     deal.stage = e.target.value;
                     deal.prob = getProbForStage(deal.stage); // Set matching probability
                     styleDropdownElement(selectStage, deal.stage);
-                    saveToDatabase();
+                    saveToDatabase(); // Instant Save on stage select
                     recalculateDashboard();
                 });
 
@@ -1159,7 +1186,7 @@
 
                 inputVal.addEventListener("change", (e) => {
                     deal.val = parseFloat(e.target.value) || 0;
-                    saveToDatabase();
+                    saveToDatabase(); // Instant Save on value change
                     recalculateDashboard();
                 });
 
@@ -1198,7 +1225,7 @@
                 inputOwner.addEventListener("change", (e) => {
                     deal.owner = e.target.value;
                     updateOwnerFilterOptions();
-                    saveToDatabase();
+                    saveToDatabase(); // Instant Save on lead edit
                     recalculateDashboard();
                 });
 
@@ -1211,7 +1238,7 @@
                 tdAction.querySelector(".action-icon").addEventListener("click", () => {
                     pipelineData.splice(idx, 1);
                     updateOwnerFilterOptions();
-                    saveToDatabase();
+                    saveToDatabase(); // Instant Save on delete
                     recalculateDashboard();
                 });
                 tr.appendChild(tdAction);
@@ -1272,9 +1299,7 @@
                     const percent = Math.min(Math.max(parseInt(e.target.value) || 0, 0), 100);
                     stage.prob = percent / 100;
                     e.target.value = percent;
-                    
-                    // Cascade changes to any active deals matching this probability ratio
-                    saveToDatabase();
+                    saveToDatabase(); // Instant Save on probability change
                 });
                 tdProb.appendChild(inputProb);
                 tr.appendChild(tdProb);
@@ -1308,7 +1333,7 @@
                 selectColor.addEventListener("change", (e) => {
                     stage.color = e.target.value;
                     selectColor.style.color = getStageHex(stage.color);
-                    saveToDatabase();
+                    saveToDatabase(); // Instant Save on color change
                 });
 
                 tdColor.appendChild(selectColor);
@@ -1331,7 +1356,7 @@
                             }
                         });
                         pipelineStages.splice(index, 1);
-                        saveToDatabase();
+                        saveToDatabase(); // Instant Save on custom stage delete
                         renderStageSettingsTable();
                     });
                     tdAction.appendChild(delIcon);
@@ -1381,7 +1406,7 @@
             dealForm.reset();
             modal.classList.remove("open");
             updateOwnerFilterOptions();
-            saveToDatabase();
+            saveToDatabase(); // Instant Save on deal submission
             recalculateDashboard();
         });
 
@@ -1401,7 +1426,7 @@
         salesTargetInput.addEventListener("input", (e) => {
             const cleanTarget = Math.max(parseInt(e.target.value) || 100000, 1);
             targetRevenueGoal = cleanTarget;
-            saveToDatabase();
+            saveToDatabase(); // Instant Save on target value adjust
             recalculateDashboard();
         });
 
@@ -1438,7 +1463,7 @@
             newStageProb.value = '';
             
             // Re-render setup table and save
-            saveToDatabase();
+            saveToDatabase(); // Instant Save on stage creation
             renderStageSettingsTable();
         });
 
@@ -1449,8 +1474,8 @@
                 localStorage.removeItem("mena_tracker_stages");
                 localStorage.removeItem("mena_tracker_goal");
                 
-                pipelineData = [...defaultPipelineData];
-                pipelineStages = [...defaultPipelineStages];
+                pipelineData = JSON.parse(JSON.stringify(defaultPipelineData));
+                pipelineStages = JSON.parse(JSON.stringify(defaultPipelineStages));
                 targetRevenueGoal = defaultTargetRevenue;
                 salesTargetInput.value = defaultTargetRevenue;
 
