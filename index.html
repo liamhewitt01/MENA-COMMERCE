@@ -1,4 +1,4 @@
-<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="3" width="100%" height="800px"><head>
+<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="5" width="100%" height="800px"><head>
     <style>
         :root {
             --bg-primary: #0b1329;
@@ -333,6 +333,11 @@
             font-size: 14px;
             outline: none;
             cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-select:focus {
+            border-color: var(--accent-blue);
         }
 
         /* Dynamic Interactive Table */
@@ -567,7 +572,7 @@
         <!-- Funnel and Stage distribution visual -->
         <div class="dashboard-card">
             <div class="card-header">
-                <div class="card-title" id="card-chart-1-title">Interactive Stage Distribution</div>
+                <div class="card-title" id="card-chart-1-title">Interactive Stage Distribution (Deals Count)</div>
             </div>
             <div class="chart-container">
                 <div class="funnel-visual" id="funnel-container">
@@ -606,7 +611,7 @@
             <!-- Rendered dynamically -->
         </select>
         <select id="owner-filter" class="filter-select">
-            <option value="ALL">All Practice Leads</option>
+            <option value="ALL">All WPP/VML Leads</option>
         </select>
     </div>
 
@@ -616,12 +621,12 @@
             <thead>
                 <tr>
                     <th style="width: 25%">Opportunity / Regional Client</th>
-                    <th style="width: 18%">Stage</th>
+                    <th style="width: 22%">Stage</th>
                     <th style="width: 14%">Deal Value (USD)</th>
                     <th style="width: 11%">Probability (%)</th>
                     <th style="width: 14%">Weighted Forecast (USD)</th>
-                    <th style="width: 13%">Practice Lead</th>
-                    <th style="width: 5%"></th>
+                    <th style="width: 11%">WPP/VML Lead</th>
+                    <th style="width: 3%"></th>
                 </tr>
             </thead>
             <tbody id="pipeline-table-body">
@@ -647,7 +652,7 @@
                 </div>
                 <div class="form-group">
                     <label for="deal-stage">Pipeline Stage</label>
-                    <select id="deal-stage" class="form-field">
+                    <select id="deal-stage" class="form-field" style="background-color: var(--bg-primary); color: white;">
                         <!-- Rendered dynamically from configuration -->
                     </select>
                 </div>
@@ -656,7 +661,7 @@
                     <input type="number" id="deal-value" class="form-field" required="" placeholder="350000">
                 </div>
                 <div class="form-group">
-                    <label for="deal-owner">MENA Practice Lead</label>
+                    <label for="deal-owner">WPP/VML Lead</label>
                     <input type="text" id="deal-owner" class="form-field" required="" placeholder="e.g. Tariq Mansour">
                 </div>
                 <div class="modal-footer">
@@ -669,20 +674,20 @@
 
     <!-- Interactive Config Modal for Stages & Probability -->
     <div id="stage-settings-modal" class="modal">
-        <div class="modal-content" style="width: 550px;">
+        <div class="modal-content" style="width: 580px;">
             <div class="modal-header">
                 <span>Manage Pipeline Stages &amp; Probabilities</span>
             </div>
             <div style="margin-bottom: 16px; font-size: 13px; color: var(--text-muted);">
-                Add new pipeline stages or edit current probability ratios. "Closed Won" (100% target progress) and "Closed Lost" (0% tracking) flags are preserved to drive target calculations.
+                Add new pipeline stages or edit current probability ratios. You can select custom theme colors for each stage to enable dynamic color-coding across the table and dropdowns.
             </div>
             
             <table class="settings-table">
                 <thead>
                     <tr>
-                        <th style="width: 40%">Stage Name</th>
-                        <th style="width: 25%">Prob (%)</th>
-                        <th style="width: 20%">Color</th>
+                        <th style="width: 35%">Stage Name</th>
+                        <th style="width: 20%">Prob (%)</th>
+                        <th style="width: 30%">Theme Color</th>
                         <th style="width: 15%">Actions</th>
                     </tr>
                 </thead>
@@ -696,12 +701,12 @@
                 <div style="display: flex; gap: 8px;">
                     <input type="text" id="new-stage-name" class="settings-input" placeholder="e.g. Technical Assessment" style="flex: 2;">
                     <input type="number" id="new-stage-prob" class="settings-input" placeholder="50" min="0" max="100" style="flex: 1;">
-                    <select id="new-stage-color" class="settings-input" style="flex: 1.2; background: var(--bg-primary); color: white;">
-                        <option value="var(--accent-blue)">Blue</option>
-                        <option value="var(--accent-violet)">Violet</option>
-                        <option value="var(--accent-amber)">Amber</option>
-                        <option value="var(--accent-emerald)">Emerald</option>
-                        <option value="var(--accent-rose)">Rose</option>
+                    <select id="new-stage-color" class="settings-input" style="flex: 1.5; background: var(--bg-primary); color: white;">
+                        <option value="var(--accent-blue)" style="background-color: #0b1329; color: #00b4d8;">🩵 Blue</option>
+                        <option value="var(--accent-violet)" style="background-color: #0b1329; color: #7209b7;">💜 Violet</option>
+                        <option value="var(--accent-amber)" style="background-color: #0b1329; color: #ffd166;">💛 Amber</option>
+                        <option value="var(--accent-emerald)" style="background-color: #0b1329; color: #06d6a0;">💚 Emerald</option>
+                        <option value="var(--accent-rose)" style="background-color: #0b1329; color: #ef476f;">❤️ Rose</option>
                     </select>
                 </div>
                 <button type="button" id="add-new-stage-btn" class="btn-accent" style="margin-top: 12px; width: 100%; justify-content: center;">
@@ -721,13 +726,15 @@
             { id: 1, name: "Omnichannel Commerce Replatform", company: "Majid Al Futtaim (MAF)", stage: "Proposal", val: 450000, prob: 0.50, owner: "Tariq Mansour" },
             { id: 2, name: "Saudi Hypermarket Marketplace Design", company: "Panda Retail Group", stage: "Negotiation", val: 380000, prob: 0.80, owner: "Layla Al-Saud" },
             { id: 3, name: "D2C Commerce Strategy Advisory", company: "Chalhoub Group", stage: "Discovery", val: 120000, prob: 0.20, owner: "Amir El-Masry" },
-            { id: 4, name: "Loyalty Integration Engine Setup", company: "Alshaya Group", stage: "Discovery", val: 310000, prob: 0.20, owner: "Tariq Mansour" },
+            { id: 4, name: "Loyalty Integration Engine Setup", company: "Alshaya Group", stage: "Active Contact", val: 310000, prob: 0.10, owner: "Tariq Mansour" },
             { id: 5, name: "B2B Commerce Procurement Portal", company: "Emaar Properties", stage: "Closed Won", val: 550000, prob: 1.00, owner: "Layla Al-Saud" },
             { id: 6, name: "Last-Mile Integration Rollout", company: "Aramex HQ", stage: "Closed Lost", val: 240000, prob: 0.00, owner: "Amir El-Masry" }
         ];
 
-        // Pipeline Configurable Stages Database
+        // Pipeline Configurable Stages Database - Re-sequenced per request
         let pipelineStages = [
+            { name: "Outreach", prob: 0.05, color: "var(--accent-blue)", isLocked: false },
+            { name: "Active Contact", prob: 0.10, color: "var(--accent-violet)", isLocked: false },
             { name: "Discovery", prob: 0.20, color: "var(--accent-blue)", isLocked: false },
             { name: "Proposal", prob: 0.50, color: "var(--accent-violet)", isLocked: false },
             { name: "Negotiation", prob: 0.80, color: "var(--accent-amber)", isLocked: false },
@@ -768,9 +775,32 @@
         const newStageProb = document.getElementById("new-stage-prob");
         const newStageColor = document.getElementById("new-stage-color");
 
+        // Helper: Convert CSS variables to static colors for select tags dropdown previewing
+        const rawColorsMap = {
+            "var(--accent-blue)": "#00b4d8",
+            "var(--accent-violet)": "#7209b7",
+            "var(--accent-amber)": "#ffd166",
+            "var(--accent-emerald)": "#06d6a0",
+            "var(--accent-rose)": "#ef476f"
+        };
+
+        function getStageHex(colorVar) {
+            return rawColorsMap[colorVar] || "#3a506b";
+        }
+
         // Format currencies beautifully
         function formatCurrency(amount) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
+        }
+
+        // Apply color matching directly on dropdown boxes
+        function styleDropdownElement(selectEl, stageName) {
+            const stageColor = getColorForStage(stageName);
+            const hexColor = getStageHex(stageColor);
+            
+            selectEl.style.borderColor = stageColor;
+            selectEl.style.color = hexColor;
+            selectEl.style.fontWeight = "bold";
         }
 
         // Initialize / Re-render Stage drop-downs
@@ -793,8 +823,13 @@
                 const opt = document.createElement("option");
                 opt.value = stage.name;
                 opt.textContent = `${stage.name} (${Math.round(stage.prob * 100)}%)`;
+                opt.style.color = getStageHex(stage.color);
                 dealStageDropdown.appendChild(opt);
             });
+            
+            if (pipelineStages.length > 0) {
+                styleDropdownElement(dealStageDropdown, dealStageDropdown.value);
+            }
         }
 
         // Initialize Owner Dropdown list based on unique data
@@ -802,7 +837,7 @@
             const currentSelected = ownerFilter.value || "ALL";
             const uniqueOwners = [...new Set(pipelineData.map(d => d.owner))];
             
-            ownerFilter.innerHTML = '<option value="ALL">All Practice Leads</option>';
+            ownerFilter.innerHTML = '<option value="ALL">All WPP/VML Leads</option>';
             uniqueOwners.forEach(owner => {
                 const opt = document.createElement("option");
                 opt.value = owner;
@@ -831,7 +866,7 @@
             let totalClosedWon = 0;
             let totalActiveDeals = 0;
 
-            // Dynamically seed funnel grouping from the current stages
+            // Dynamically seed counts from current stages setup list
             const funnelGroups = {};
             pipelineStages.forEach(stage => {
                 funnelGroups[stage.name] = 0;
@@ -841,9 +876,9 @@
                 const dealProb = getProbForStage(deal.stage);
                 const weighted = deal.val * dealProb;
                 
-                // Track dynamic configurations safety
+                // Track counts instead of values
                 if (funnelGroups[deal.stage] !== undefined) {
-                    funnelGroups[deal.stage] += deal.val;
+                    funnelGroups[deal.stage]++; // Count incremented instead of cash value addition
                 }
 
                 if (deal.stage !== "Closed Won" && deal.stage !== "Closed Lost") {
@@ -852,7 +887,7 @@
                     totalActiveDeals++;
                 } else if (deal.stage === "Closed Won") {
                     totalClosedWon += deal.val;
-                    weightedForecast += deal.val; // Won counts full forecast weight
+                    weightedForecast += deal.val;
                 }
             });
 
@@ -871,21 +906,21 @@
             const currentDashOffset = totalDash - (totalDash * (percentageToGoal / 100));
             progressCircle.style.strokeDashoffset = currentDashOffset;
 
-            // Build funnel interactive elements
+            // Build funnel interactive elements based on counts
             renderFunnelChart(funnelGroups, Math.max(...Object.values(funnelGroups), 1));
             
             // Re-render dynamic main table rows
             renderTableRows();
         }
 
-        // Render graphical funnel bar representation
+        // Render graphical funnel representation using COUNTS
         function renderFunnelChart(funnelGroups, maxVal) {
             funnelContainer.innerHTML = '';
             
             pipelineStages.forEach(stageObj => {
                 const stageName = stageObj.name;
-                const val = funnelGroups[stageName] || 0;
-                const percentScale = (val / maxVal) * 100;
+                const count = funnelGroups[stageName] || 0;
+                const percentScale = (count / maxVal) * 100;
                 const stageColor = stageObj.color;
 
                 const row = document.createElement("div");
@@ -906,7 +941,7 @@
 
                 const valLabel = document.createElement("div");
                 valLabel.className = "funnel-val";
-                valLabel.textContent = formatCurrency(val);
+                valLabel.textContent = `${count} ${count === 1 ? 'Opportunity' : 'Opportunities'}`;
 
                 barContainer.appendChild(bar);
                 barContainer.appendChild(valLabel);
@@ -950,25 +985,32 @@
                 tdDetails.innerHTML = `<strong>${deal.name}</strong><br><span style="font-size: 11px; color: var(--text-muted);">${deal.company}</span>`;
                 tr.appendChild(tdDetails);
 
-                // Cell 2: Interactive Stage select
+                // Cell 2: Interactive Stage select with ADVANCED Color Coding
                 const tdStage = document.createElement("td");
                 const selectStage = document.createElement("select");
                 selectStage.className = "filter-select";
                 selectStage.style.fontSize = "12px";
                 selectStage.style.padding = "6px";
                 selectStage.style.width = "100%";
+                selectStage.style.backgroundColor = "var(--bg-primary)";
                 
                 pipelineStages.forEach(stageObj => {
                     const option = document.createElement("option");
                     option.value = stageObj.name;
                     option.textContent = stageObj.name;
+                    option.style.color = getStageHex(stageObj.color);
+                    option.style.backgroundColor = "var(--bg-primary)";
                     if(deal.stage === stageObj.name) option.selected = true;
                     selectStage.appendChild(option);
                 });
 
+                // Style select box based on color coding
+                styleDropdownElement(selectStage, deal.stage);
+
                 selectStage.addEventListener("change", (e) => {
                     deal.stage = e.target.value;
                     deal.prob = getProbForStage(deal.stage); // Set matching probability
+                    styleDropdownElement(selectStage, deal.stage);
                     recalculateDashboard();
                 });
 
@@ -1013,7 +1055,7 @@
                 tdWeighted.textContent = formatCurrency(deal.val * getProbForStage(deal.stage));
                 tr.appendChild(tdWeighted);
 
-                // Cell 6: Editable Owner
+                // Cell 6: Editable WPP/VML Lead
                 const tdOwner = document.createElement("td");
                 const inputOwner = document.createElement("input");
                 inputOwner.type = "text";
@@ -1043,7 +1085,7 @@
             });
         }
 
-        // Render Master Configurations inside setup Modal
+        // Render Master Configurations inside setup Modal with custom colors selection
         function renderStageSettingsTable() {
             settingsStagesBody.innerHTML = '';
             
@@ -1103,26 +1145,30 @@
                 const selectColor = document.createElement("select");
                 selectColor.className = "settings-input";
                 selectColor.style.background = "var(--bg-primary)";
-                selectColor.style.color = "white";
+                selectColor.style.color = getStageHex(stage.color);
+                selectColor.style.fontWeight = "bold";
                 
                 const colors = [
-                    { val: "var(--accent-blue)", text: "Blue" },
-                    { val: "var(--accent-violet)", text: "Violet" },
-                    { val: "var(--accent-amber)", text: "Amber" },
-                    { val: "var(--accent-emerald)", text: "Emerald" },
-                    { val: "var(--accent-rose)", text: "Rose" }
+                    { val: "var(--accent-blue)", text: "🩵 Blue" },
+                    { val: "var(--accent-violet)", text: "💜 Violet" },
+                    { val: "var(--accent-amber)", text: "💛 Amber" },
+                    { val: "var(--accent-emerald)", text: "💚 Emerald" },
+                    { val: "var(--accent-rose)", text: "❤️ Rose" }
                 ];
 
                 colors.forEach(col => {
                     const opt = document.createElement("option");
                     opt.value = col.val;
                     opt.textContent = col.text;
+                    opt.style.color = getStageHex(col.val);
+                    opt.style.backgroundColor = "var(--bg-primary)";
                     if(stage.color === col.val) opt.selected = true;
                     selectColor.appendChild(opt);
                 });
 
                 selectColor.addEventListener("change", (e) => {
                     stage.color = e.target.value;
+                    selectColor.style.color = getStageHex(stage.color);
                 });
 
                 tdColor.appendChild(selectColor);
@@ -1163,6 +1209,10 @@
 
         closeBtn.addEventListener("click", () => {
             modal.classList.remove("open");
+        });
+
+        dealStageDropdown.addEventListener("change", (e) => {
+            styleDropdownElement(dealStageDropdown, e.target.value);
         });
 
         dealForm.addEventListener("submit", (e) => {
