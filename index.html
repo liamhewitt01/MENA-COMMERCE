@@ -1,4 +1,4 @@
-<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="13" width="100%" height="800px"><head>
+<html data-type="html" data-identifier="d140cccb-fb1a-4a08-bb34-2e250ff5312f" data-title="MENA Commerce Practice Pipeline &amp; Opp Tracker" data-version="17" width="100%" height="800px"><head>
     <style>
         :root {
             --bg-primary: #0b1329;
@@ -536,7 +536,7 @@
                     <th style="width: 18%">Service Pillar</th>
                     <th style="width: 18%">Stage</th>
                     <th style="width: 14%">Deal Value (USD)</th>
-                    <th style="width: 10%">Prob (%)</th>
+                    <th style="width: 10%">Probability (%)</th>
                     <th style="width: 15%">Weighted Forecast</th>
                     <th style="width: 15%">WPP/VML Lead</th>
                 </tr>
@@ -549,8 +549,8 @@
 
     <script>
         // --- 1. ENTER YOUR GOOGLE SHEET CONFIGURATION HERE ---
-        const SHEET_ID = "YOUR_GOOGLE_SHEET_ID_HERE"; // Paste your Google Sheet ID string here!
-        const SHEET_NAME = "Sheet1"; // The name of the tab containing your data
+        const SHEET_ID = "10Y7rOUKY2OOGJKInuRGuANjFE0EvLq7NabxsCDCNP7Q"; // Paste your Google Sheet ID string here!
+        const SHEET_NAME = "Sheet1"; // The name of your spreadsheet tab (usually Sheet1)
 
         // Default local Stages database
         const pipelineStages = [
@@ -561,6 +561,14 @@
             { name: "Negotiation", prob: 0.80, color: "var(--accent-amber)" },
             { name: "Closed Won", prob: 1.00, color: "var(--accent-emerald)" },
             { name: "Closed Lost", prob: 0.00, color: "var(--accent-rose)" }
+        ];
+
+        // Service pillar configuration database
+        const servicePillars = [
+            "Owned Commerce",
+            "Social Commerce",
+            "Marketplaces & Retail Media",
+            "Omnichannel"
         ];
 
         let pipelineData = [];
@@ -591,42 +599,39 @@
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
         }
 
-        // Fetch Pipeline Data directly from Google's CSV Export Endpoint
+        // Fetch Pipeline Data directly from Google's Visualisation JSON API
         async function fetchGoogleSheetData() {
             syncStatus.textContent = "🔄 Pulling fresh Google Sheet data...";
             syncStatus.style.color = "var(--accent-amber)";
 
-            const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+            const jsonUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
             try {
-                const response = await fetch(csvUrl);
+                const response = await fetch(jsonUrl);
                 if (!response.ok) throw new Error("Connection failed");
-                const csvText = await response.text();
+                const text = await response.text();
                 
-                // Parse CSV rows cleanly
-                parseCsvToPipeline(csvText);
+                // Extract inner JSON contents cleanly
+                const cleanJsonText = text.substring(text.indexOf("google.visualization.Query.setResponse(") + 38, text.length - 2);
+                const parsedJsonObj = JSON.parse(cleanJsonText);
+                
+                parseGoogleJsonToPipeline(parsedJsonObj);
 
                 syncStatus.textContent = "✓ Connected to Google Sheet (Live)";
                 syncStatus.style.color = "var(--accent-emerald)";
             } catch (err) {
                 console.error(err);
-                syncStatus.textContent = "❌ Offline mode (Check Sheet ID / Sharing)";
+                syncStatus.textContent = "❌ Connection Error (Check Sheet ID / Sharing)";
                 syncStatus.style.color = "var(--accent-rose)";
             }
         }
 
-        // Clean CSV parser handles quotes, commas, and dynamic row-scanning
-        function parseCsvToPipeline(csvText) {
-            // Split CSV by lines
-            const lines = csvText.split(/\r?\n/).map(line => {
-                // Match commas outside of quotes to parse cells safely
-                const cells = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-                return cells.map(cell => cell.replace(/^"|"$/g, '').trim());
-            });
+        // Robust JSON parser with Case-Insensitive Matching
+        function parseGoogleJsonToPipeline(jsonObj) {
+            const rows = jsonObj.table.rows;
+            if (!rows || rows.length === 0) return;
 
-            if (lines.length === 0) return;
-
-            // DYNAMIC HEADER SCANNING: Find which index matches which field
+            let headerRowIndex = -1;
             let opportunityColIdx = -1;
             let clientColIdx = -1;
             let pillarColIdx = -1;
@@ -634,27 +639,31 @@
             let valueColIdx = -1;
             let leadColIdx = -1;
 
-            let headerRowIdx = -1;
+            // Search rows dynamically for headers
+            for (let i = 0; i < Math.min(rows.length, 5); i++) {
+                const cells = rows[i].c;
+                if (!cells) continue;
 
-            // Scan rows to find our headers row
-            for (let i = 0; i < Math.min(lines.length, 5); i++) {
-                const cells = lines[i];
-                opportunityColIdx = cells.findIndex(c => c.toLowerCase().includes("opportunity"));
-                clientColIdx = cells.findIndex(c => c.toLowerCase().includes("client"));
-                
+                for (let j = 0; j < cells.length; j++) {
+                    if (!cells[j] || !cells[j].v) continue;
+                    const val = cells[j].v.toString().toLowerCase();
+
+                    if (val.includes("opportunity")) opportunityColIdx = j;
+                    if (val.includes("client")) clientColIdx = j;
+                    if (val.includes("pillar")) pillarColIdx = j;
+                    if (val.includes("stage")) stageColIdx = j;
+                    if (val.includes("value")) valueColIdx = j;
+                    if (val.includes("lead")) leadColIdx = j;
+                }
+
                 if (opportunityColIdx !== -1 && clientColIdx !== -1) {
-                    headerRowIdx = i;
-                    pillarColIdx = cells.findIndex(c => c.toLowerCase().includes("pillar"));
-                    stageColIdx = cells.findIndex(c => c.toLowerCase().includes("stage"));
-                    valueColIdx = cells.findIndex(c => c.toLowerCase().includes("value"));
-                    leadColIdx = cells.findIndex(c => c.toLowerCase().includes("lead"));
+                    headerRowIndex = i;
                     break;
                 }
             }
 
-            // Fallback default indices if headers aren't found
-            if (headerRowIdx === -1) {
-                headerRowIdx = 0;
+            if (headerRowIndex === -1) {
+                headerRowIndex = 0;
                 opportunityColIdx = 0;
                 clientColIdx = 1;
                 pillarColIdx = 2;
@@ -665,23 +674,48 @@
 
             const parsedDeals = [];
 
-            // Process all rows AFTER our headers row
-            for (let i = headerRowIdx + 1; i < lines.length; i++) {
-                const cells = lines[i];
-                if (!cells || cells.length <= Math.max(opportunityColIdx, clientColIdx)) continue;
-                
-                const oppName = cells[opportunityColIdx];
-                if (!oppName || oppName.trim() === "") continue; // Skip blank rows
+            for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                const cells = rows[i].c;
+                if (!cells) continue;
 
-                const clientName = cells[clientColIdx] || "";
-                const servicePillar = pillarColIdx !== -1 ? (cells[pillarColIdx] || "Omnichannel") : "Omnichannel";
-                const stageName = stageColIdx !== -1 ? (cells[stageColIdx] || "Discovery") : "Discovery";
+                const opportunityCell = cells[opportunityColIdx];
+                if (!opportunityCell || opportunityCell.v === null || opportunityCell.v === undefined) continue;
+
+                const oppName = opportunityCell.v.toString().trim();
+                if (oppName === "" || oppName.toLowerCase() === "opportunity") continue;
+
+                const clientName = (cells[clientColIdx] && cells[clientColIdx].v !== null) ? cells[clientColIdx].v.toString().trim() : "";
                 
-                const rawValueStr = valueColIdx !== -1 ? (cells[valueColIdx] || "0") : "0";
-                const valueNum = parseFloat(rawValueStr.replace(/[^\d.]/g, '')) || 0;
+                // CASE-INSENSITIVE normalisation for Service Pillar values
+                let servicePillar = "Omnichannel";
+                if (pillarColIdx !== -1 && cells[pillarColIdx] && cells[pillarColIdx].v !== null) {
+                    const rawPillar = cells[pillarColIdx].v.toString().trim();
+                    const matchedPillar = servicePillars.find(p => p.toLowerCase() === rawPillar.toLowerCase());
+                    if (matchedPillar) {
+                        servicePillar = matchedPillar;
+                    } else {
+                        // If there is no exact matching pillar, fallback to a readable formatted string
+                        servicePillar = rawPillar.charAt(0).toUpperCase() + rawPillar.slice(1).toLowerCase();
+                    }
+                }
+
+                // CASE-INSENSITIVE normalisation for Pipeline Stage names
+                let stageName = "Discovery";
+                if (stageColIdx !== -1 && cells[stageColIdx] && cells[stageColIdx].v !== null) {
+                    const rawStage = cells[stageColIdx].v.toString().trim();
+                    const matchedStage = pipelineStages.find(s => s.name.toLowerCase() === rawStage.toLowerCase());
+                    if (matchedStage) stageName = matchedStage.name;
+                }
                 
-                const leadName = leadColIdx !== -1 ? (cells[leadColIdx] || "-") : "-";
-                const probValue = getProbForStage(stageName);
+                let rawValue = 0;
+                if (valueColIdx !== -1 && cells[valueColIdx] && cells[valueColIdx].v !== null) {
+                    const rawVal = cells[valueColIdx].v;
+                    rawValue = typeof rawVal === 'number' ? rawVal : parseFloat(rawVal.toString().replace(/[^\d.]/g, '')) || 0;
+                }
+                
+                // Support dynamic WPP/VML lead extraction, fall back to dash if cell is missing
+                const leadName = (leadColIdx !== -1 && cells[leadColIdx] && cells[leadColIdx].v !== null) ? cells[leadColIdx].v.toString().trim() : "-";
+                const probability = getProbForStage(stageName);
 
                 parsedDeals.push({
                     id: i,
@@ -689,15 +723,14 @@
                     company: clientName,
                     pillar: servicePillar,
                     stage: stageName,
-                    val: valueNum,
-                    prob: probValue,
+                    val: rawValue,
+                    prob: probability,
                     owner: leadName
                 });
             }
 
             pipelineData = parsedDeals;
-            
-            // Re-render dashboard visuals
+
             updateStageDropdowns();
             updateOwnerFilterOptions();
             recalculateDashboard();
@@ -767,7 +800,7 @@
             renderTableRows();
         }
 
-        // Render graphical funnel representation using COUNTS
+        // Render funnel bars
         function renderFunnelChart(funnelGroups, maxVal) {
             funnelContainer.innerHTML = '';
             
@@ -805,7 +838,20 @@
             });
         }
 
-        // Read-only dynamic grid loaded from Sheet
+        // Helper: Convert CSS variables to static colors for select tags dropdown previewing
+        const rawColorsMap = {
+            "var(--accent-blue)": "#00b4d8",
+            "var(--accent-violet)": "#7209b7",
+            "var(--accent-amber)": "#ffd166",
+            "var(--accent-emerald)": "#06d6a0",
+            "var(--accent-rose)": "#ef476f"
+        };
+
+        function getStageHex(colorVar) {
+            return rawColorsMap[colorVar] || "#3a506b";
+        }
+
+        // Read-only spreadsheet grid
         function renderTableRows() {
             const searchQuery = searchInput.value.toLowerCase().trim();
             const stageFilterVal = stageFilter.value || "ALL";
@@ -819,8 +865,10 @@
                                       deal.company.toLowerCase().includes(searchQuery) ||
                                       deal.owner.toLowerCase().includes(searchQuery);
                 const matchesStage = stageFilterVal === "ALL" || deal.stage === stageFilterVal;
-                const matchesPillar = pillarFilterVal === "ALL" || deal.pillar === pillarFilterVal;
-                const matchesOwner = ownerFilterVal === "ALL" || deal.owner === ownerFilterVal;
+                
+                // Case-Insensitive checking for the dropdown filters
+                const matchesPillar = pillarFilterVal === "ALL" || deal.pillar.toLowerCase() === pillarFilterVal.toLowerCase();
+                const matchesOwner = ownerFilterVal === "ALL" || deal.owner.toLowerCase() === ownerFilterVal.toLowerCase();
 
                 if (!matchesSearch || !matchesStage || !matchesPillar || !matchesOwner) {
                     return; 
@@ -833,12 +881,12 @@
                 tdDetails.innerHTML = `<strong>${deal.name}</strong><br><span style="font-size: 11px; color: var(--text-muted);">${deal.company}</span>`;
                 tr.appendChild(tdDetails);
 
-                // Cell 2: Service Pillar (Read-Only)
+                // Cell 2: Service Pillar
                 const tdPillar = document.createElement("td");
                 tdPillar.textContent = deal.pillar;
                 tr.appendChild(tdPillar);
 
-                // Cell 3: Stage Color Tag (Read-Only)
+                // Cell 3: Stage Color Tag
                 const tdStage = document.createElement("td");
                 const hexColor = getStageHex(getColorForStage(deal.stage));
                 tdStage.innerHTML = `<span style="color: ${hexColor}; font-weight: bold;">● ${deal.stage}</span>`;
@@ -884,9 +932,10 @@
             stageFilter.value = selectedFilter;
         }
 
+        // Populate Lead dropdown
         function updateOwnerFilterOptions() {
             const currentSelected = ownerFilter.value || "ALL";
-            const uniqueOwners = [...new Set(pipelineData.map(d => d.owner))];
+            const uniqueOwners = [...new Set(pipelineData.map(d => d.owner))].filter(owner => owner !== "-");
             
             ownerFilter.innerHTML = '<option value="ALL">All WPP/VML Leads</option>';
             uniqueOwners.forEach(owner => {
