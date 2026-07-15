@@ -611,110 +611,104 @@
                 if (!response.ok) throw new Error("Connection failed");
                 const text = await response.text();
                 
-                // Extract inner JSON contents cleanly
-                const cleanJsonText = text.substring(text.indexOf("google.visualization.Query.setResponse(") + 38, text.length - 2);
-                const parsedJsonObj = JSON.parse(cleanJsonText);
-                
+                // Extract the JSON payload returned by Google's GViz endpoint.
+                // Do not use a hard-coded character offset: the wrapper is 39 characters long,
+                // and the previous +38 left an opening parenthesis in the JSON string.
+                const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
+                if (!match) {
+                    throw new Error("Unexpected response from Google Sheets");
+                }
+
+                const parsedJsonObj = JSON.parse(match[1]);
+                if (parsedJsonObj.status === "error") {
+                    throw new Error(parsedJsonObj.errors?.[0]?.detailed_message || "Google Sheets returned an error");
+                }
+
                 parseGoogleJsonToPipeline(parsedJsonObj);
 
                 syncStatus.textContent = "✓ Connected to Google Sheet (Live)";
                 syncStatus.style.color = "var(--accent-emerald)";
             } catch (err) {
-                console.error(err);
-                syncStatus.textContent = "❌ Connection Error (Check Sheet ID / Sharing)";
+                console.error("Google Sheet sync failed:", err);
+                syncStatus.textContent = `❌ ${err.message || "Connection Error"}`;
                 syncStatus.style.color = "var(--accent-rose)";
             }
         }
 
-        // Robust JSON parser with Case-Insensitive Matching
+        // Parse Google GViz JSON using the column labels supplied in table.cols.
+        // GViz usually removes the header row from table.rows, so scanning the first data rows
+        // for header names can skip the first opportunity.
         function parseGoogleJsonToPipeline(jsonObj) {
-            const rows = jsonObj.table.rows;
-            if (!rows || rows.length === 0) return;
+            const table = jsonObj?.table;
+            const rows = table?.rows || [];
+            const cols = table?.cols || [];
 
-            let headerRowIndex = -1;
-            let opportunityColIdx = -1;
-            let clientColIdx = -1;
-            let pillarColIdx = -1;
-            let stageColIdx = -1;
-            let valueColIdx = -1;
-            let leadColIdx = -1;
-
-            // Search rows dynamically for headers
-            for (let i = 0; i < Math.min(rows.length, 5); i++) {
-                const cells = rows[i].c;
-                if (!cells) continue;
-
-                for (let j = 0; j < cells.length; j++) {
-                    if (!cells[j] || !cells[j].v) continue;
-                    const val = cells[j].v.toString().toLowerCase();
-
-                    if (val.includes("opportunity")) opportunityColIdx = j;
-                    if (val.includes("client")) clientColIdx = j;
-                    if (val.includes("pillar")) pillarColIdx = j;
-                    if (val.includes("stage")) stageColIdx = j;
-                    if (val.includes("value")) valueColIdx = j;
-                    if (val.includes("lead")) leadColIdx = j;
-                }
-
-                if (opportunityColIdx !== -1 && clientColIdx !== -1) {
-                    headerRowIndex = i;
-                    break;
-                }
+            if (!cols.length) {
+                throw new Error("No columns were returned from Google Sheets");
             }
 
-            if (headerRowIndex === -1) {
-                headerRowIndex = 0;
-                opportunityColIdx = 0;
-                clientColIdx = 1;
-                pillarColIdx = 2;
-                stageColIdx = 3;
-                valueColIdx = 4;
-                leadColIdx = 5;
+            const normalise = value => (value || "").toString().trim().toLowerCase();
+            const columnLabels = cols.map(col => normalise(col.label || col.id));
+
+            const findColumn = (...terms) => columnLabels.findIndex(label =>
+                terms.some(term => label.includes(term))
+            );
+
+            const opportunityColIdx = findColumn("opportunity");
+            const clientColIdx = findColumn("client");
+            const pillarColIdx = findColumn("pillar", "service pillar");
+            const stageColIdx = findColumn("stage");
+            const valueColIdx = findColumn("value", "deal value");
+            const leadColIdx = findColumn("lead", "owner");
+
+            if (opportunityColIdx === -1) {
+                throw new Error(`Missing required 'Opportunity' column. Found: ${columnLabels.join(", ")}`);
             }
 
             const parsedDeals = [];
 
-            for (let i = headerRowIndex + 1; i < rows.length; i++) {
-                const cells = rows[i].c;
-                if (!cells) continue;
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].c || [];
+                const getCellValue = index => {
+                    if (index === -1 || !cells[index] || cells[index].v === null || cells[index].v === undefined) return null;
+                    return cells[index].v;
+                };
 
-                const opportunityCell = cells[opportunityColIdx];
-                if (!opportunityCell || opportunityCell.v === null || opportunityCell.v === undefined) continue;
+                const opportunityValue = getCellValue(opportunityColIdx);
+                if (opportunityValue === null) continue;
 
-                const oppName = opportunityCell.v.toString().trim();
-                if (oppName === "" || oppName.toLowerCase() === "opportunity") continue;
+                const oppName = opportunityValue.toString().trim();
+                if (!oppName) continue;
 
-                const clientName = (cells[clientColIdx] && cells[clientColIdx].v !== null) ? cells[clientColIdx].v.toString().trim() : "";
-                
-                // CASE-INSENSITIVE normalisation for Service Pillar values
+                const clientValue = getCellValue(clientColIdx);
+                const clientName = clientValue === null ? "" : clientValue.toString().trim();
+
                 let servicePillar = "Omnichannel";
-                if (pillarColIdx !== -1 && cells[pillarColIdx] && cells[pillarColIdx].v !== null) {
-                    const rawPillar = cells[pillarColIdx].v.toString().trim();
+                const pillarValue = getCellValue(pillarColIdx);
+                if (pillarValue !== null) {
+                    const rawPillar = pillarValue.toString().trim();
                     const matchedPillar = servicePillars.find(p => p.toLowerCase() === rawPillar.toLowerCase());
-                    if (matchedPillar) {
-                        servicePillar = matchedPillar;
-                    } else {
-                        // If there is no exact matching pillar, fallback to a readable formatted string
-                        servicePillar = rawPillar.charAt(0).toUpperCase() + rawPillar.slice(1).toLowerCase();
-                    }
+                    servicePillar = matchedPillar || rawPillar;
                 }
 
-                // CASE-INSENSITIVE normalisation for Pipeline Stage names
                 let stageName = "Discovery";
-                if (stageColIdx !== -1 && cells[stageColIdx] && cells[stageColIdx].v !== null) {
-                    const rawStage = cells[stageColIdx].v.toString().trim();
+                const stageValue = getCellValue(stageColIdx);
+                if (stageValue !== null) {
+                    const rawStage = stageValue.toString().trim();
                     const matchedStage = pipelineStages.find(s => s.name.toLowerCase() === rawStage.toLowerCase());
                     if (matchedStage) stageName = matchedStage.name;
                 }
-                
+
                 let rawValue = 0;
-                if (valueColIdx !== -1 && cells[valueColIdx] && cells[valueColIdx].v !== null) {
-                    const rawVal = cells[valueColIdx].v;
-                    rawValue = typeof rawVal === 'number' ? rawVal : parseFloat(rawVal.toString().replace(/[^\d.]/g, '')) || 0;
+                const value = getCellValue(valueColIdx);
+                if (value !== null) {
+                    rawValue = typeof value === "number"
+                        ? value
+                        : parseFloat(value.toString().replace(/[^\d.-]/g, "")) || 0;
                 }
-                
-                // Support dynamic WPP/VML lead extraction, fall back to dash if cell is missing
-                const leadName = (leadColIdx !== -1 && cells[leadColIdx] && cells[leadColIdx].v !== null) ? cells[leadColIdx].v.toString().trim() : "-";
+
+                const leadValue = getCellValue(leadColIdx);
+                const leadName = leadValue === null ? "-" : leadValue.toString().trim();
                 const probability = getProbForStage(stageName);
 
                 parsedDeals.push({
@@ -730,7 +724,6 @@
             }
 
             pipelineData = parsedDeals;
-
             updateStageDropdowns();
             updateOwnerFilterOptions();
             recalculateDashboard();
